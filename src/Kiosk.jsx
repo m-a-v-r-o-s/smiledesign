@@ -191,7 +191,7 @@ export default function Kiosk() {
         </div>
       </header>
 
-      <div className="progress" aria-hidden="true"><span style={{ width: `${(stepNo / total) * 100}%` }} /></div>
+      <div className="progress" aria-hidden="true"><span style={{ transform: `scaleX(${stepNo / total})` }} /></div>
 
       <main className="k-main" key={current}>
         <p className="eyebrow">{t('stepOf', { a: stepNo, b: total })}</p>

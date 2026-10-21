@@ -130,7 +130,7 @@ fieldset[aria-invalid=true] .option span { border-color: var(--alert); }
 .lang-switch button[aria-pressed=true] { background: var(--gold-ink); color: #fff; }
 
 .progress { height: 3px; background: var(--line); position: sticky; top: calc(72px + env(safe-area-inset-top)); z-index: 5; }
-.progress span { display: block; height: 100%; background: var(--gold); transition: width .5s var(--ease); }
+.progress span { display: block; height: 100%; background: var(--gold); transform-origin: left; transition: transform .5s var(--ease); }
 
 .k-main { max-width: 780px; margin: 0 auto; padding: 2.2rem 16px 9rem; animation: rise .5s var(--ease) both; }
 @media (min-width: 700px) { .k-main { padding-inline: 40px; } .k-top { padding-inline: 32px; } }
@@ -274,7 +274,8 @@ tr.fresh { animation: fresh 2.4s var(--ease); }
 .alerts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
 .alerts li { background: var(--alert-soft); color: var(--alert); font-weight: 600; font-size: .85em; padding: .25em .7em; border-radius: 6px; }
 .alerts.compact li { font-size: .78em; }
-.alert-box { background: var(--paper); border: 1.5px solid #efcfca; border-left: 4px solid var(--alert); border-radius: 10px; padding: 1rem 1.2rem; margin: 1.2rem 0; }
+.alert-box { background: var(--alert-soft); border: 1.5px solid #efcfca; border-radius: 10px; padding: 1rem 1.2rem; margin: 1.2rem 0; }
+.alert-box .alerts li { background: var(--paper); }
 .alert-box h2 { font-size: .8em; text-transform: uppercase; letter-spacing: .1em; color: var(--alert); margin-bottom: .6rem; }
 .alert-box .muted { margin: -.4rem 0 .6rem; }
 
@@ -311,7 +312,7 @@ tr.fresh { animation: fresh 2.4s var(--ease); }
 .signature { display: block; width: 320px; max-width: 100%; height: auto; border-bottom: 1.5px solid var(--ink); margin-bottom: .5rem; }
 
 .toasts { position: fixed; right: 16px; bottom: 16px; z-index: 30; display: grid; gap: .6rem; max-width: min(380px, calc(100vw - 32px)); }
-.toast { display: block; background: var(--charcoal); color: #f2ede4; text-decoration: none; padding: .9rem 1.1rem; border-radius: 12px; box-shadow: 0 10px 30px rgb(0 0 0 / 25%); border-left: 4px solid var(--gold); animation: slide .45s var(--ease) both; }
+.toast { display: block; background: var(--charcoal); color: #f2ede4; text-decoration: none; padding: .9rem 1.1rem; border-radius: 12px; box-shadow: 0 10px 30px rgb(0 0 0 / 25%); animation: slide .45s var(--ease) both; }
 .toast:hover { color: #fff; }
 .toast strong { display: block; color: #d4b47a; font-size: .75em; text-transform: uppercase; letter-spacing: .1em; }
 
