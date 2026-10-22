@@ -173,8 +173,9 @@ export default function Kiosk() {
 
   if (current === 'done') return <Done name={patient.firstName} t={t} lang={lang} onFinish={reset} />
 
-  const stepNo = step // pick = 1
-  const total = steps.length - 2
+  // Counting starts at "details": on "pick" the number of forms (and so the total) is still changing.
+  const stepNo = step - 1 // pick = 0, details = 1
+  const total = steps.length - 3 // details + one per form
   const errorCount = Object.values(errors).filter(Boolean).length
   const isLastForm = form && steps[step + 1] === 'done'
 
@@ -195,7 +196,7 @@ export default function Kiosk() {
       <div className="progress" aria-hidden="true"><span style={{ transform: `scaleX(${stepNo / total})` }} /></div>
 
       <main className="k-main" key={current}>
-        <p className="eyebrow">{t('stepOf', { a: stepNo, b: total })}</p>
+        {stepNo > 0 && <p className="eyebrow">{t('stepOf', { a: stepNo, b: total })}</p>}
 
         {current === 'pick' && (
           <>
