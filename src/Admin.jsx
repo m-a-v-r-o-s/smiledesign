@@ -141,6 +141,8 @@ function Login({ onDone }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [hint, setHint] = useState('')
+  useEffect(() => { api('/api/demo-passcode').then(d => setHint(d.passcode)).catch(() => {}) }, [])
   async function submit(e) {
     e.preventDefault()
     setBusy(true); setError('')
@@ -163,6 +165,11 @@ function Login({ onDone }) {
           {error && <p className="field-error" id="login-err" role="alert">{error}</p>}
         </div>
         <button className="btn primary block" disabled={busy || !code} aria-busy={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        {hint && (
+          <p className="demo-hint">
+            Demo passcode: <button type="button" className="link mono" onClick={() => setCode(hint)} aria-label={`Fill in demo passcode ${hint}`}>{hint}</button>
+          </p>
+        )}
       </form>
     </main>
   )

@@ -226,6 +226,8 @@ fieldset[aria-invalid=true] .option span { border-color: var(--alert); }
 .login-card { width: min(380px, 100%); background: var(--paper); padding: 2.2rem; border-radius: var(--radius); box-shadow: var(--shadow); display: grid; gap: 1.2rem; justify-items: center; }
 .login-card h1 { font-size: 1.4rem; }
 .login-card .field { width: 100%; margin: 0; }
+.demo-hint { margin: 0; font-size: .85em; color: var(--ink-2); background: var(--gold-soft); border-radius: 8px; padding: .5em .9em; }
+.demo-hint .link { color: var(--gold-ink); font-weight: 700; }
 
 .admin { min-height: 100dvh; display: grid; grid-template-columns: 1fr; font-size: 15px; }
 .sidebar { background: var(--charcoal); color: #e9e4da; display: flex; align-items: center; gap: 1rem; padding: 10px 16px; flex-wrap: wrap; }

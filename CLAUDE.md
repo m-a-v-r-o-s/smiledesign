@@ -32,6 +32,7 @@ Gold `#b18435` (decorative only, 3.4:1), text/buttons gold `#8c6421` (5.3:1), ch
 
 - Supabase in an EU region (health data is GDPR special-category), RLS on every table, signatures in a private bucket.
 - Staff auth with email OTP, per-user accounts, audit log of who opened/printed which form.
+  Delete `/api/demo-passcode` and the login-screen hint: they publish the demo passcode.
 - Server-generated PDF stored at signing time (the browser print is fine for the demo).
 - iPad pairing token so only the clinic's iPad can submit.
 - Ops health check (`/healthz` exists; add `/api/health/ops` once there is a database).

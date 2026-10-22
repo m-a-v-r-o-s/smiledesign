@@ -137,6 +137,9 @@ async function api(req, res, path) {
     return send(res, 200, { ok: true }, { 'Set-Cookie': cookie })
   }
 
+  // ponytail: demo only, shows the passcode on the login screen. Remove before any real patient data.
+  if (m === 'GET' && path === '/api/demo-passcode') return send(res, 200, { passcode: PASSCODE })
+
   // Everything below is staff-only.
   if (!authed(req)) return send(res, 401, { error: 'Sign in required' })
 
