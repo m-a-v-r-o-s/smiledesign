@@ -106,8 +106,11 @@ const html = `<!doctype html>
   .box h3 { margin-top: 0; }
   ol, ul { margin: 0; padding-left: 20px; }
   li { margin-bottom: 5px; }
-  .appendix { break-before: page; }
+  .appendix, .closing { break-before: page; }
   .appendix p, .appendix li { font-size: 9.2pt; }
+  table.costs { margin-top: 2px; }
+  table.costs td.price { text-align: right; font-weight: 600; color: #12132b; width: 38%; }
+  ul.notes { margin: 8px 0 4px; font-size: 9pt; color: #444766; }
   .sign { margin-top: 14px; break-inside: avoid; }
   .sign strong { color: #12132b; }
   a { color: #5b5fc7; text-decoration: none; }
@@ -123,20 +126,36 @@ const html = `<!doctype html>
 
 ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
 
+<section class="closing">
 <div class="box">
   <h3>Μια παρατήρηση</h3>
   <p>Στη λίστα παθήσεων του ελληνικού εντύπου, εκεί που το αγγλικό γράφει «Atrial Fibrillation», είναι τυπωμένο «Αρτηριακή Υπέρταση», ενώ η «Υπέρταση» υπάρχει ήδη μία γραμμή πιο πάνω. Δεν ξέρω αν είναι σκόπιμο, αλλά υποψιάζομαι ότι εννοείται η «Κολπική μαρμαρυγή», και έτσι το έχω βάλει προς το παρόν στην εφαρμογή. Πείτε μου αν θέλετε να το αλλάξω.</p>
 </div>
 
+<h3>Κόστος και φιλοξενία</h3>
+<table class="costs"><tbody>
+  <tr><td class="el">Αυτόματη αποστολή email με κάθε συμπλήρωση</td><td class="price">100 € επιπλέον, εφάπαξ</td></tr>
+  <tr><td class="el">Διεύθυνση εφαρμογής</td><td class="price">Χωρίς κόστος</td></tr>
+  <tr><td class="el">Φιλοξενία (Railway, servers στην Ευρώπη)</td><td class="price">Περίπου 80 € τον χρόνο</td></tr>
+  <tr><td class="el">Αποστολή email (Resend)</td><td class="price">0 € έως 100 email την ημέρα</td></tr>
+</tbody></table>
+<ul class="notes">
+  <li>Η εφαρμογή μπορεί να λειτουργεί σε υποτομέα του site σας, π.χ. <strong>forms.smiledesign.com.cy</strong>, οπότε δεν χρειάζεται νέο domain. Αρκεί να προστεθούν μερικές εγγραφές DNS, που σας τις στέλνω έτοιμες.</li>
+  <li>Η φιλοξενία μπορεί να τιμολογείται μία φορά τον χρόνο.</li>
+  <li>Η αποστολή email είναι δωρεάν έως 3.000 email τον μήνα και 100 την ημέρα. Αν ξεπεραστούν αυτά τα όρια, υπάρχει επιπλέον κόστος 20 $ τον μήνα (περίπου 18 €) για έως 50.000 email.</li>
+</ul>
+
 <div class="box">
   <h3>Μια ερώτηση</h3>
-  <p>Πόσοι ασθενείς συμπληρώνουν αυτά τα έντυπα, κατά μέσο όρο, τον μήνα; Μου χρειάζεται για να οργανώσω σωστά την αυτόματη αποστολή email που συζητήσαμε.</p>
+  <p>Πόσοι ασθενείς συμπληρώνουν αυτά τα έντυπα, κατά μέσο όρο, τον μήνα; Μου χρειάζεται για να οργανώσω σωστά την αυτόματη αποστολή email που συζητήσαμε και να σας επιβεβαιώσω ότι δεν θα υπάρξει επιπλέον κόστος αποστολής.</p>
 </div>
 
 <div class="sign">
   <strong>Θεόδωρος Μαύρος</strong><br>Akos Digital Services<br>
   <a href="mailto:info@akosds.com">info@akosds.com</a> · <a href="https://www.akosds.com">akosds.com</a>
 </div>
+
+</section>
 
 <section class="appendix" lang="ru">
   <h2 lang="el"><span class="num">Π</span>Παράρτημα: ρωσική μετάφραση της συγκατάθεσης πολυμέσων</h2>
