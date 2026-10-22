@@ -142,6 +142,7 @@ function Login({ onDone }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [hint, setHint] = useState('')
+  const [show, setShow] = useState(false)
   useEffect(() => { api('/api/demo-passcode').then(d => setHint(d.passcode)).catch(() => {}) }, [])
   async function submit(e) {
     e.preventDefault()
@@ -160,8 +161,17 @@ function Login({ onDone }) {
         <h1>Clinic sign in</h1>
         <div className="field">
           <label htmlFor="passcode">Passcode</label>
-          <input id="passcode" type="password" value={code} onChange={e => setCode(e.target.value)} autoFocus required
-            aria-invalid={!!error} aria-describedby={error ? 'login-err' : undefined} />
+          <div className="reveal">
+            <input id="passcode" type={show ? 'text' : 'password'} value={code} onChange={e => setCode(e.target.value)} autoFocus required
+              autoComplete="current-password" aria-invalid={!!error} aria-describedby={error ? 'login-err' : undefined} />
+            <button type="button" className="reveal-btn" onClick={() => setShow(s => !s)} aria-pressed={show} aria-label={show ? 'Hide passcode' : 'Show passcode'}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+                {show && <path d="M4 4l16 16" />}
+              </svg>
+            </button>
+          </div>
           {error && <p className="field-error" id="login-err" role="alert">{error}</p>}
         </div>
         <button className="btn primary block" disabled={busy || !code} aria-busy={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>

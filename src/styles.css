@@ -226,6 +226,11 @@ fieldset[aria-invalid=true] .option span { border-color: var(--alert); }
 .login-card { width: min(380px, 100%); background: var(--paper); padding: 2.2rem; border-radius: var(--radius); box-shadow: var(--shadow); display: grid; gap: 1.2rem; justify-items: center; }
 .login-card h1 { font-size: 1.4rem; }
 .login-card .field { width: 100%; margin: 0; }
+.reveal { position: relative; }
+.reveal input { padding-right: 3.2em !important; }
+.reveal-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; border-radius: 8px; color: var(--ink-2); }
+.reveal-btn:hover { color: var(--gold-ink); }
+.reveal-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .demo-hint { margin: 0; font-size: .85em; color: var(--ink-2); background: var(--gold-soft); border-radius: 8px; padding: .5em .9em; }
 .demo-hint .link { color: var(--gold-ink); font-weight: 700; }
 
