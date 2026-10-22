@@ -90,6 +90,7 @@ const html = `<!doctype html>
   p { margin: 0 0 8px; }
   .muted { color: #6b6e8a; }
   .small { font-size: 8.5pt; color: #6b6e8a; margin-top: 6px; }
+  .legend .alert { margin: 0 6px 0 0; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
@@ -119,6 +120,7 @@ const html = `<!doctype html>
 
 <h1>Πεδία των ψηφιακών εντύπων ασθενών</h1>
 <p class="muted">Smile Design Dental Clinic · Δρ. Κυριακή Γεωργιάδου, DDS</p>
+<p class="small legend"><span class="alert">ειδοποίηση</span> η απάντηση εμφανίζεται με κόκκινο στην καρτέλα του ασθενούς.</p>
 
 <h2><span class="num">1</span>Στοιχεία ασθενούς</h2>
 <p class="muted">Συμπληρώνονται μία φορά, πριν από το πρώτο έντυπο, και ενώνουν όλα τα έντυπα του ίδιου ασθενούς σε μία καρτέλα.</p>
