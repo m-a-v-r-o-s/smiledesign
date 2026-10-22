@@ -83,7 +83,7 @@ const html = `<!doctype html>
   header strong { letter-spacing: .14em; font-size: 10.5pt; }
   header span { margin-left: auto; font-size: 8.5pt; color: #c9c6d8; }
   h1 { font-size: 19pt; font-weight: 600; margin: 22px 0 4px; color: #12132b; }
-  h2 { font-size: 13.5pt; margin: 26px 0 2px; color: #12132b; display: flex; align-items: center; gap: 10px; break-after: avoid; }
+  h2 { font-size: 13.5pt; margin: 20px 0 2px; color: #12132b; display: flex; align-items: center; gap: 10px; break-after: avoid; }
   h2 .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #5b5fc7; color: #fff; font-size: 10pt; }
   h3 { font-size: 10pt; text-transform: uppercase; letter-spacing: .08em; color: #6366a1; margin: 16px 0 6px; break-after: avoid; }
   h4 { font-size: 9.6pt; margin: 14px 0 6px; break-after: avoid; }
@@ -94,7 +94,7 @@ const html = `<!doctype html>
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
   th { text-align: left; font-size: 7.6pt; text-transform: uppercase; letter-spacing: .06em; color: #6366a1; background: #eef0fc; padding: 5px 7px; border-bottom: 1px solid #d8dcf5; }
-  td { padding: 5px 7px; border-bottom: 1px solid #e7e8f3; vertical-align: top; }
+  td { padding: 4px 7px; border-bottom: 1px solid #e7e8f3; vertical-align: top; }
   td.el { font-weight: 600; }
   td.type { color: #444766; width: 24%; }
   td.req { width: 7%; text-align: center; }
@@ -102,13 +102,13 @@ const html = `<!doctype html>
   table.opts td { padding: 3px 7px; font-size: 8.8pt; }
   .alert { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: #fbeeec; color: #a3261d; font-size: 7.4pt; font-weight: 700; }
   sup { color: #5b5fc7; font-weight: 700; }
-  .box { background: #eef0fc; border: 1px solid #d8dcf5; border-radius: 10px; padding: 12px 16px; margin: 14px 0; break-inside: avoid; }
+  .box { background: #eef0fc; border: 1px solid #d8dcf5; border-radius: 10px; padding: 9px 14px 6px; margin: 10px 0; break-inside: avoid; }
   .box h3 { margin-top: 0; }
   ol, ul { margin: 0; padding-left: 20px; }
   li { margin-bottom: 5px; }
   .appendix { break-before: page; }
   .appendix p, .appendix li { font-size: 9.2pt; }
-  .sign { margin-top: 22px; break-inside: avoid; }
+  .sign { margin-top: 14px; break-inside: avoid; }
   .sign strong { color: #12132b; }
   a { color: #5b5fc7; text-decoration: none; }
 </style></head><body>
@@ -126,6 +126,11 @@ ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
 <div class="box">
   <h3>Μια παρατήρηση</h3>
   <p>Στη λίστα παθήσεων του ελληνικού εντύπου, εκεί που το αγγλικό γράφει «Atrial Fibrillation», είναι τυπωμένο «Αρτηριακή Υπέρταση», ενώ η «Υπέρταση» υπάρχει ήδη μία γραμμή πιο πάνω. Δεν ξέρω αν είναι σκόπιμο, αλλά υποψιάζομαι ότι εννοείται η «Κολπική μαρμαρυγή», και έτσι το έχω βάλει προς το παρόν στην εφαρμογή. Πείτε μου αν θέλετε να το αλλάξω.</p>
+</div>
+
+<div class="box">
+  <h3>Μια ερώτηση</h3>
+  <p>Μου ζητήσατε να στέλνεται email με κάθε συμπλήρωση εντύπου. Πόσα αυτόματα email περίπου περιμένετε τον μήνα; Αν είναι πιο εύκολο, πείτε μου πόσοι ασθενείς συμπληρώνουν έντυπα τον μήνα και το υπολογίζω εγώ.</p>
 </div>
 
 <div class="sign">
