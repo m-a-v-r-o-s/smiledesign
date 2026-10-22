@@ -94,7 +94,6 @@ const html = `<!doctype html>
   p { margin: 0 0 8px; }
   .muted { color: #6b6e8a; }
   .small { font-size: 8.5pt; color: #6b6e8a; margin-top: 6px; }
-  .lead { font-size: 10.5pt; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
@@ -122,18 +121,11 @@ const html = `<!doctype html>
 <h1>Πεδία των ψηφιακών εντύπων ασθενών</h1>
 <p class="muted">Smile Design Dental Clinic · Δρ. Κυριακή Γεωργιάδου, DDS</p>
 
-<p class="lead">Πέρασα στην εφαρμογή τα δύο έντυπα που χρησιμοποιείτε σήμερα: το Έντυπο Καταγραφής Ασθενούς και τη Συγκατάθεση Επεξεργασίας και Δημοσίευσης Πολυμέσων. Παρακάτω είναι όλα τα πεδία που θα συμπληρώνει ο ασθενής στο iPad, στη γλώσσα που διαλέγει (ελληνικά, αγγλικά ή ρωσικά). Στο τέλος σημειώνω τι άλλαξα σε σχέση με το χαρτί και τι χρειάζομαι να μου επιβεβαιώσετε.</p>
-
 <h2><span class="num">1</span>Στοιχεία ασθενούς</h2>
 <p class="muted">Συμπληρώνονται μία φορά, πριν από το πρώτο έντυπο, και ενώνουν όλα τα έντυπα του ίδιου ασθενούς σε μία καρτέλα.</p>
 <table>${HEAD}<tbody>${PATIENT.map(p => row(p.el, p.en, p.ru, p.type, true)).join('')}</tbody></table>
 
 ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
-
-<div class="box">
-  <h3>Τι επισημαίνεται στην κλινική</h3>
-  <p>Τα πεδία με την ένδειξη <span class="alert">ειδοποίηση</span> εμφανίζονται με κόκκινο στην καρτέλα του ασθενούς και στη λίστα εντύπων: κάθε πάθηση που τσεκάρεται, οι άλλες αλλεργίες, τα φάρμακα και το «ΟΧΙ ΠΡΟΣΩΠΟ», ώστε να τα βλέπει αμέσως όποιος ανοίξει τον φάκελο.</p>
-</div>
 
 <h2><span class="num">${FORMS.length + 2}</span>Τι άλλαξα σε σχέση με τα χάρτινα έντυπα</h2>
 <ol>
