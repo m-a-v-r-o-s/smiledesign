@@ -123,6 +123,11 @@ const html = `<!doctype html>
 
 ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
 
+<div class="box">
+  <h3>Μια παρατήρηση</h3>
+  <p>Στη λίστα παθήσεων του ελληνικού εντύπου, εκεί που το αγγλικό γράφει «Atrial Fibrillation», είναι τυπωμένο «Αρτηριακή Υπέρταση», ενώ η «Υπέρταση» υπάρχει ήδη μία γραμμή πιο πάνω. Δεν ξέρω αν είναι σκόπιμο, αλλά υποψιάζομαι ότι εννοείται η «Κολπική μαρμαρυγή», και έτσι το έχω βάλει προς το παρόν στην εφαρμογή. Πείτε μου αν θέλετε να το αλλάξω.</p>
+</div>
+
 <div class="sign">
   <strong>Θεόδωρος Μαύρος</strong><br>Akos Digital Services<br>
   <a href="mailto:info@akosds.com">info@akosds.com</a> · <a href="https://www.akosds.com">akosds.com</a>
