@@ -1,190 +1,197 @@
 // Form definitions, shared by the kiosk, the admin and the server (validation).
-// PLACEHOLDER CONTENT: realistic drafts until the clinic sends the real forms.
-// Replacing a form = editing its entry here; nothing else needs to change.
+// Source: the clinic's paper forms (photos received 2026-10-22), English and Greek as printed.
+// Russian is our translation and needs a native-speaker check before real use.
+// Deliberate fixes against the paper: Greek "Atrial fibrillation" was printed as «Αρτηριακή Υπέρταση»
+// (a duplicate of hypertension), English "Lever Cirrhosis" typo, Greek media consent says «θα γράψω»
+// (I will write) where the iPad has a checkbox, so «θα επιλέξω».
 //
 // Field types: text, textarea, date, yesno (optional `details` follow-up on "yes"),
-// choice (one option), multi (several, an option with `none: true` is exclusive), consent (checkbox).
-// `alert: '<English label>'` surfaces a "yes"/selected answer as a medical alert in the admin.
+// choice (one option), multi (several, an option with `none: true` is exclusive), consent (checkbox),
+// info (read-only text: `body` per language, a list of paragraphs, { h } headings and { ul } lists).
+// `alert: '<English label>'` surfaces a "yes"/ticked answer as an alert in the admin.
 
 export const LANGS = ['en', 'el', 'ru']
+
+const opt = (id, en, el, ru) => ({ id, label: { en, el, ru } })
 
 export const FORMS = [
   {
     id: 'medical-history',
-    minutes: 4,
-    title: { en: 'Medical history', el: 'Ιατρικό ιστορικό', ru: 'Медицинская анкета' },
+    minutes: 5,
+    title: { en: 'Medical form', el: 'Έντυπο Καταγραφής Ασθενούς', ru: 'Медицинская анкета' },
     description: {
-      en: 'Your general health and dental history.',
-      el: 'Η γενική σας υγεία και το οδοντιατρικό σας ιστορικό.',
-      ru: 'Ваше общее здоровье и стоматологический анамнез.',
+      en: 'Your details and medical history.',
+      el: 'Τα στοιχεία σας και το ιατρικό σας ιστορικό.',
+      ru: 'Ваши данные и медицинский анамнез.',
     },
     sections: [
       {
-        title: { en: 'General health', el: 'Γενική υγεία', ru: 'Общее здоровье' },
+        title: { en: 'Personal details', el: 'Προσωπικά στοιχεία', ru: 'Личные данные' },
         fields: [
           {
-            id: 'doctorCare', type: 'yesno', required: true,
-            label: { en: "Are you currently under a doctor's care?", el: 'Βρίσκεστε αυτή τη στιγμή υπό ιατρική παρακολούθηση;', ru: 'Наблюдаетесь ли вы сейчас у врача?' },
-            details: { en: 'Please give details', el: 'Παρακαλούμε δώστε λεπτομέρειες', ru: 'Пожалуйста, уточните' },
+            id: 'gender', type: 'choice', required: true,
+            label: { en: 'Gender', el: 'Φύλο', ru: 'Пол' },
+            options: [opt('male', 'Male', 'Άρρεν', 'Мужской'), opt('female', 'Female', 'Θήλυ', 'Женский')],
           },
+          { id: 'address', type: 'text', required: true, label: { en: 'Address', el: 'Διεύθυνση', ru: 'Адрес' } },
+          { id: 'city', type: 'text', required: true, label: { en: 'City', el: 'Πόλη', ru: 'Город' } },
+          { id: 'postcode', type: 'text', inputMode: 'numeric', label: { en: 'Postcode', el: 'Τ.Κ.', ru: 'Почтовый индекс' } },
+          { id: 'phone2', type: 'text', inputMode: 'tel', label: { en: 'Other phone', el: 'Άλλο τηλέφωνο', ru: 'Другой телефон' } },
           {
-            id: 'medications', type: 'yesno', required: true, alert: 'Medication',
-            label: { en: 'Are you taking any medication?', el: 'Παίρνετε κάποια φάρμακα;', ru: 'Принимаете ли вы какие-либо лекарства?' },
-            details: { en: 'Which ones?', el: 'Ποια;', ru: 'Какие?' },
+            id: 'emergency', type: 'text',
+            label: { en: 'Emergency contact (name and phone)', el: 'Επαφή έκτακτης ανάγκης (όνομα και τηλέφωνο)', ru: 'Контакт на экстренный случай (имя и телефон)' },
           },
+          { id: 'occupation', type: 'text', label: { en: 'Occupation', el: 'Επάγγελμα', ru: 'Профессия' } },
+        ],
+      },
+      {
+        title: { en: 'Medical history', el: 'Ιατρικό ιστορικό', ru: 'Медицинский анамнез' },
+        fields: [
           {
-            id: 'anticoagulants', type: 'yesno', required: true, alert: 'Blood thinners',
-            label: { en: 'Are you taking blood thinners (e.g. aspirin, warfarin)?', el: 'Παίρνετε αντιπηκτικά (π.χ. ασπιρίνη, βαρφαρίνη);', ru: 'Принимаете ли вы препараты, разжижающие кровь (например, аспирин, варфарин)?' },
+            id: 'conditions', type: 'multi', required: true, alert: 'Condition',
+            label: { en: 'Please tick everything that applies to you', el: 'Παρακαλώ σημειώστε όσα ισχύουν για εσάς', ru: 'Отметьте всё, что относится к вам' },
+            options: [
+              opt('anestheticAllergy', 'Anesthetic allergy', 'Αλλεργία σε αναισθητικά', 'Аллергия на анестетики'),
+              opt('smoking', 'Smoking', 'Κάπνισμα', 'Курение'),
+              opt('myocardialInfarction', 'History of myocardial infarction', 'Ιστορικό εμφράγματος μυοκαρδίου', 'Инфаркт миокарда в анамнезе'),
+              opt('hypertension', 'Hypertension', 'Υπέρταση', 'Гипертония'),
+              opt('atrialFibrillation', 'Atrial fibrillation', 'Κολπική μαρμαρυγή', 'Мерцательная аритмия'),
+              opt('arrhythmias', 'Arrhythmias', 'Αρρυθμίες', 'Аритмия'),
+              opt('aspirin', 'Aspirin intake', 'Λήψη ασπιρίνης', 'Приём аспирина'),
+              opt('endocarditis', 'Infective endocarditis', 'Ιστορικό λοιμώδους ενδοκαρδίτιδας', 'Инфекционный эндокардит'),
+              opt('cholesterol', 'High cholesterol', 'Χοληστερόλη', 'Повышенный холестерин'),
+              opt('stroke', 'Stroke', 'Εγκεφαλικό', 'Инсульт'),
+              opt('kidney', 'Kidney disease', 'Νοσήματα νεφρών', 'Заболевания почек'),
+              opt('penicillinAllergy', 'Penicillin allergy', 'Αλλεργία στην πενικιλίνη', 'Аллергия на пенициллин'),
+              opt('cancer', 'History of cancer', 'Ιστορικό καρκίνου', 'Онкологические заболевания в анамнезе'),
+              opt('hiv', 'HIV', 'HIV', 'ВИЧ'),
+              opt('anemia', 'Anemia', 'Αναιμία', 'Анемия'),
+              opt('diabetes', 'Diabetes mellitus', 'Σακχαρώδης διαβήτης', 'Сахарный диабет'),
+              opt('thyroid', 'Hyper/hypo thyroidism', 'Υπέρ/υπό θυρεοειδισμός', 'Гипер-/гипотиреоз'),
+              opt('epilepsy', 'Epilepsy', 'Επιληψία', 'Эпилепсия'),
+              opt('reflux', 'Gastroesophageal reflux', 'Γαστροοισοφαγική παλινδρόμηση', 'Гастроэзофагеальный рефлюкс'),
+              opt('anxiolytics', 'Intake of anxiolytics/antidepressants', 'Λήψη αγχολυτικών/αντικαταθλιπτικών', 'Приём успокоительных/антидепрессантов'),
+              opt('asthma', 'Asthma', 'Άσθμα', 'Астма'),
+              opt('osteoporosis', 'Osteoporosis', 'Οστεοπόρωση', 'Остеопороз'),
+              opt('cirrhosis', 'Liver cirrhosis', 'Κίρρωση ήπατος', 'Цирроз печени'),
+              opt('pregnancy', 'Pregnancy', 'Εγκυμοσύνη', 'Беременность'),
+              opt('latexAllergy', 'Latex allergy', 'Αλλεργία στο latex', 'Аллергия на латекс'),
+              opt('radiation', 'Radiation therapy', 'Ακτινοθεραπεία', 'Лучевая терапия'),
+              opt('hepatitis', 'Hepatitis', 'Ηπατίτιδα', 'Гепатит'),
+              opt('pulmonary', 'Chronic pulmonary insufficiency', 'Χρόνια πνευμονική ανεπάρκεια', 'Хроническая лёгочная недостаточность'),
+              { ...opt('none', 'None of the above', 'Κανένα από τα παραπάνω', 'Ничего из перечисленного'), none: true },
+            ],
           },
           {
             id: 'allergies', type: 'yesno', required: true, alert: 'Allergy',
-            label: { en: 'Do you have any allergies (medicines, latex, anaesthetics)?', el: 'Έχετε κάποια αλλεργία (φάρμακα, λάτεξ, αναισθητικά);', ru: 'Есть ли у вас аллергия (на лекарства, латекс, анестетики)?' },
-            details: { en: 'What are you allergic to?', el: 'Σε τι είστε αλλεργικός/ή;', ru: 'На что именно?' },
+            label: { en: 'Do you have any other known allergies?', el: 'Έχετε άλλες γνωστές αλλεργίες;', ru: 'Есть ли у вас другие известные аллергии?' },
+            details: { en: 'Please list them', el: 'Παρακαλώ σημειώστε τες', ru: 'Перечислите их' },
           },
           {
-            id: 'conditions', type: 'multi', required: true, alert: 'Condition',
-            label: { en: 'Do you have, or have you had, any of the following?', el: 'Έχετε ή είχατε ποτέ κάποιο από τα παρακάτω;', ru: 'Есть ли или были ли у вас следующие заболевания?' },
-            options: [
-              { id: 'heart', label: { en: 'Heart condition', el: 'Καρδιοπάθεια', ru: 'Заболевание сердца' } },
-              { id: 'bp', label: { en: 'High blood pressure', el: 'Υψηλή αρτηριακή πίεση', ru: 'Повышенное давление' } },
-              { id: 'diabetes', label: { en: 'Diabetes', el: 'Διαβήτης', ru: 'Диабет' } },
-              { id: 'asthma', label: { en: 'Asthma', el: 'Άσθμα', ru: 'Астма' } },
-              { id: 'epilepsy', label: { en: 'Epilepsy', el: 'Επιληψία', ru: 'Эпилепсия' } },
-              { id: 'hepatitis', label: { en: 'Hepatitis', el: 'Ηπατίτιδα', ru: 'Гепатит' } },
-              { id: 'bleeding', label: { en: 'Bleeding disorder', el: 'Διαταραχή πηκτικότητας', ru: 'Нарушение свёртываемости крови' } },
-              { id: 'none', none: true, label: { en: 'None of these', el: 'Κανένα από αυτά', ru: 'Ничего из перечисленного' } },
-            ],
+            id: 'medications', type: 'yesno', required: true, alert: 'Medication',
+            label: { en: 'Are you taking any medication?', el: 'Λαμβάνετε φάρμακα;', ru: 'Принимаете ли вы лекарства?' },
+            details: { en: 'Which ones?', el: 'Ποια;', ru: 'Какие?' },
           },
           {
-            id: 'pregnant', type: 'yesno', alert: 'Pregnant or breastfeeding',
-            label: { en: 'Are you pregnant or breastfeeding?', el: 'Είστε έγκυος ή θηλάζετε;', ru: 'Вы беременны или кормите грудью?' },
-          },
-          {
-            id: 'smoker', type: 'yesno', required: true,
-            label: { en: 'Do you smoke?', el: 'Καπνίζετε;', ru: 'Вы курите?' },
+            id: 'other', type: 'textarea',
+            label: { en: 'Anything else about your health we should know?', el: 'Κάτι άλλο για την υγεία σας που πρέπει να γνωρίζουμε;', ru: 'Что-то ещё о вашем здоровье, что нам следует знать?' },
           },
         ],
       },
       {
-        title: { en: 'Dental history', el: 'Οδοντιατρικό ιστορικό', ru: 'Стоматологический анамнез' },
+        title: { en: 'Other information', el: 'Άλλες πληροφορίες', ru: 'Другая информация' },
         fields: [
-          {
-            id: 'lastVisit', type: 'choice', required: true,
-            label: { en: 'When was your last dental visit?', el: 'Πότε ήταν η τελευταία σας επίσκεψη σε οδοντίατρο;', ru: 'Когда вы последний раз были у стоматолога?' },
-            options: [
-              { id: 'lt6', label: { en: 'Less than 6 months ago', el: 'Πριν από λιγότερο από 6 μήνες', ru: 'Менее 6 месяцев назад' } },
-              { id: '6to12', label: { en: '6 to 12 months ago', el: 'Πριν από 6 έως 12 μήνες', ru: '6–12 месяцев назад' } },
-              { id: '1to2', label: { en: '1 to 2 years ago', el: 'Πριν από 1 έως 2 χρόνια', ru: '1–2 года назад' } },
-              { id: 'gt2', label: { en: 'More than 2 years ago', el: 'Πριν από περισσότερα από 2 χρόνια', ru: 'Более 2 лет назад' } },
-            ],
-          },
-          {
-            id: 'reason', type: 'textarea',
-            label: { en: 'What brings you in today?', el: 'Ποιος είναι ο λόγος της επίσκεψής σας σήμερα;', ru: 'Что привело вас к нам сегодня?' },
-          },
-          {
-            id: 'anxiety', type: 'choice', required: true,
-            label: { en: 'How do you feel about dental treatment?', el: 'Πώς νιώθετε για την οδοντιατρική θεραπεία;', ru: 'Как вы относитесь к стоматологическому лечению?' },
-            options: [
-              { id: 'calm', label: { en: 'Relaxed', el: 'Ήρεμα', ru: 'Спокойно' } },
-              { id: 'little', label: { en: 'A little nervous', el: 'Λίγο αγχωμένος/η', ru: 'Немного волнуюсь' } },
-              { id: 'very', label: { en: 'Very anxious', el: 'Πολύ αγχωμένος/η', ru: 'Очень боюсь' } },
-            ],
-          },
+          { id: 'doctors', type: 'text', label: { en: 'Your medical doctors', el: 'Θεράποντες ιατροί', ru: 'Ваши лечащие врачи' } },
+          { id: 'orthodontist', type: 'text', label: { en: 'Orthodontist', el: 'Ορθοδοντικός', ru: 'Ортодонт' } },
+          { id: 'referral', type: 'text', label: { en: 'How did you hear about our clinic?', el: 'Πώς μάθατε για την κλινική μας;', ru: 'Как вы узнали о нашей клинике?' } },
         ],
       },
     ],
-    declaration: {
-      en: 'I confirm that the information above is accurate to the best of my knowledge, and I will tell the clinic about any changes to my health.',
-      el: 'Βεβαιώνω ότι οι παραπάνω πληροφορίες είναι ακριβείς εξ όσων γνωρίζω και θα ενημερώσω την κλινική για οποιαδήποτε αλλαγή στην υγεία μου.',
-      ru: 'Я подтверждаю, что приведённые выше сведения верны, насколько мне известно, и обязуюсь сообщать клинике обо всех изменениях в состоянии моего здоровья.',
-    },
   },
   {
-    id: 'treatment-consent',
-    minutes: 2,
-    title: { en: 'Consent to treatment', el: 'Συναίνεση για θεραπεία', ru: 'Согласие на лечение' },
+    id: 'media-consent',
+    minutes: 3,
+    title: {
+      en: 'Consent to processing and publishing media',
+      el: 'Συγκατάθεση επεξεργασίας και δημοσίευσης πολυμέσων',
+      ru: 'Согласие на обработку и публикацию медиаматериалов',
+    },
     description: {
-      en: 'Confirms your dentist has explained the planned treatment.',
-      el: 'Επιβεβαιώνει ότι ο οδοντίατρός σας σάς εξήγησε την προγραμματισμένη θεραπεία.',
-      ru: 'Подтверждает, что врач объяснил вам планируемое лечение.',
+      en: 'Photos and video of your treatment, with Kaimakki Studio.',
+      el: 'Φωτογραφίες και βίντεο της θεραπείας σας, με την Kaimakki Studio.',
+      ru: 'Фото и видео вашего лечения, совместно с Kaimakki Studio.',
     },
     sections: [
       {
-        title: { en: 'Your treatment', el: 'Η θεραπεία σας', ru: 'Ваше лечение' },
+        title: { en: 'What you agree to', el: 'Με τι συμφωνείτε', ru: 'С чем вы соглашаетесь' },
         fields: [
           {
-            id: 'treatment', type: 'text', required: true,
-            label: { en: 'Treatment discussed with your dentist', el: 'Θεραπεία που συζητήσατε με τον οδοντίατρό σας', ru: 'Лечение, которое вы обсудили с врачом' },
+            id: 'terms', type: 'info',
+            body: {
+              en: [
+                'I grant Smile Design and its appointed media partner, Kaimakki Studio (kaimakki.com), permission to record, photograph, and film my consultation, treatment process, and treatment results, including my voice, mouth, teeth, and any related clinical material, such as intraoral photographs, scans, and before-and-after comparisons.',
+                'My full face will not be filmed or photographed during treatment. Full-face footage will only be taken outside the treatment context, when I am standing and showing my natural smile.',
+                "I consent to this material being used on Smile Design's social media accounts, website, marketing materials, and paid advertising campaigns, in Cyprus and internationally, in any format and without any time limit.",
+                'Smile Design will not publish my full name, contact details, date of birth, address, medical history, or any other information that directly identifies me, beyond what is visible in the material itself, without my separate written consent.',
+                { h: 'I understand that:' },
+                { ul: [
+                  'I will not receive payment, royalties, or any other compensation for the use of this material.',
+                  'Once the material is published, it may be reshared, screenshotted, downloaded, or republished by third parties. Smile Design and Kaimakki Studio may not be able to retrieve these copies.',
+                  'If I do not wish my face to appear in any of the material, I will check "NO FACE" below. In this case, Smile Design will only use footage that does not show my face, such as intraoral shots, footage of hands, side angles, or close-ups of the treatment work.',
+                ] },
+                { h: 'Withdrawal of consent' },
+                'I have the right to withdraw my consent at any time and for any reason by sending a written request to gdrive@smiledesign.com.cy.',
+                'Within thirty (30) days of receiving my request, Smile Design will stop publishing new material featuring me and will remove existing material from channels under its direct control, including its own social media accounts, website, and active paid advertising campaigns. Smile Design will also notify Kaimakki Studio to take the corresponding action.',
+                'Material that has been reshared by third parties or downloaded by others may no longer be retrievable or removable, and I understand this limitation.',
+                'Withdrawal of my consent will not affect my ongoing or future treatment at Smile Design in any way.',
+              ],
+              el: [
+                'Παρέχω στη Smile Design και στον συνεργάτη της για θέματα επικοινωνίας και προβολής, Kaimakki Studio (kaimakki.com), την άδεια να καταγράφουν, να φωτογραφίζουν και να βιντεοσκοπούν τη συμβουλευτική μου συνεδρία, τη διαδικασία της θεραπείας μου και τα αποτελέσματα της θεραπείας, συμπεριλαμβανομένης της φωνής μου, του στόματός μου, των δοντιών μου και κάθε σχετικού κλινικού υλικού, όπως ενδοστοματικές φωτογραφίες, σαρώσεις και συγκριτικές εικόνες πριν και μετά τη θεραπεία.',
+                'Το πρόσωπό μου στο σύνολό του δεν θα καταγράφεται κατά τη διάρκεια της θεραπείας. Πλάνα που εμφανίζουν ολόκληρο το πρόσωπό μου θα λαμβάνονται μόνο εκτός του θεραπευτικού πλαισίου, όταν στέκομαι όρθιος/όρθια και παρουσιάζω το φυσικό μου χαμόγελο.',
+                'Συναινώ στη χρήση αυτού του υλικού στους λογαριασμούς κοινωνικών δικτύων της Smile Design, στον ιστότοπό της, σε υλικό μάρκετινγκ και σε πληρωμένες διαφημιστικές καμπάνιες, στην Κύπρο και διεθνώς, σε οποιαδήποτε μορφή και χωρίς χρονικό περιορισμό.',
+                'Η Smile Design δεν θα δημοσιεύει το πλήρες ονοματεπώνυμό μου, τα στοιχεία επικοινωνίας μου, την ημερομηνία γέννησής μου, τη διεύθυνσή μου, το ιατρικό ιστορικό μου ή οποιαδήποτε άλλη πληροφορία που με ταυτοποιεί άμεσα, πέραν όσων είναι ορατά στο ίδιο το υλικό, χωρίς τη γραπτή συγκατάθεσή μου.',
+                { h: 'Κατανοώ ότι:' },
+                { ul: [
+                  'Δεν θα λάβω αμοιβή, δικαιώματα εκμετάλλευσης ή οποιαδήποτε άλλη αποζημίωση για τη συγκεκριμένη χρήση του υλικού.',
+                  'Μόλις το υλικό δημοσιευθεί, ενδέχεται να αναδημοσιευθεί, να ληφθούν στιγμιότυπα οθόνης, να μεταφορτωθεί ή να αναδημοσιευθεί από τρίτους. Η Smile Design και η Kaimakki Studio ενδέχεται να μην είναι σε θέση να ανακτήσουν αυτά τα αντίγραφα.',
+                  'Εάν δεν επιθυμώ να εμφανίζεται το πρόσωπό μου σε οποιοδήποτε από το υλικό, θα επιλέξω «ΟΧΙ ΠΡΟΣΩΠΟ» παρακάτω. Σε αυτή την περίπτωση, η Smile Design θα χρησιμοποιεί μόνο πλάνα στα οποία δεν εμφανίζεται το πρόσωπό μου, όπως ενδοστοματικές λήψεις, πλάνα των χεριών, πλάγιες λήψεις ή κοντινά πλάνα της θεραπευτικής εργασίας.',
+                ] },
+                { h: 'Ανάκληση της συγκατάθεσης' },
+                'Έχω το δικαίωμα να ανακαλέσω τη συγκατάθεσή μου οποτεδήποτε και για οποιονδήποτε λόγο, αποστέλλοντας γραπτό αίτημα στη διεύθυνση gdrive@smiledesign.com.cy.',
+                'Εντός τριάντα (30) ημερών από την παραλαβή του αιτήματός μου, η Smile Design θα σταματήσει να δημοσιεύει νέο υλικό στο οποίο εμφανίζομαι και θα αφαιρέσει το υφιστάμενο υλικό από τα κανάλια που ελέγχει άμεσα, συμπεριλαμβανομένων των δικών της λογαριασμών στα μέσα κοινωνικής δικτύωσης, του ιστότοπού της και των ενεργών πληρωμένων διαφημιστικών προγραμμάτων. Η Smile Design θα ενημερώσει επίσης την Kaimakki Studio ώστε να προβεί στις αντίστοιχες ενέργειες.',
+                'Υλικό που έχει αναδημοσιευθεί από τρίτους ή έχει μεταφορτωθεί από άλλους ενδέχεται να μην είναι πλέον δυνατό να ανακτηθεί ή να διαγραφεί, και κατανοώ αυτόν τον περιορισμό.',
+                'Η ανάκληση της συγκατάθεσής μου δεν θα επηρεάσει τη θεραπεία μου στη Smile Design.',
+              ],
+              ru: [
+                'Я предоставляю Smile Design и её медиапартнёру Kaimakki Studio (kaimakki.com) разрешение записывать, фотографировать и снимать на видео мою консультацию, процесс лечения и его результаты, включая мой голос, рот, зубы и любые связанные клинические материалы, такие как внутриротовые фотографии, сканы и сравнения «до и после».',
+                'Моё лицо целиком не будет сниматься во время лечения. Съёмка всего лица проводится только вне лечебного процесса, когда я стою и показываю свою естественную улыбку.',
+                'Я соглашаюсь на использование этих материалов в аккаунтах Smile Design в социальных сетях, на её сайте, в маркетинговых материалах и платных рекламных кампаниях, на Кипре и за рубежом, в любом формате и без ограничения срока.',
+                'Smile Design не будет публиковать моё полное имя, контактные данные, дату рождения, адрес, медицинский анамнез или любую другую информацию, прямо идентифицирующую меня, помимо того, что видно в самих материалах, без моего отдельного письменного согласия.',
+                { h: 'Я понимаю, что:' },
+                { ul: [
+                  'Я не получу оплату, роялти или иное вознаграждение за использование этих материалов.',
+                  'После публикации материалы могут быть распространены, сохранены в виде скриншотов, скачаны или опубликованы повторно третьими лицами. Smile Design и Kaimakki Studio могут не иметь возможности вернуть такие копии.',
+                  'Если я не хочу, чтобы моё лицо появлялось в каких-либо материалах, я отмечу пункт «БЕЗ ЛИЦА» ниже. В этом случае Smile Design будет использовать только кадры, на которых не видно моего лица, например внутриротовые снимки, кадры рук, съёмку сбоку или крупные планы лечебной работы.',
+                ] },
+                { h: 'Отзыв согласия' },
+                'Я имею право отозвать своё согласие в любое время и по любой причине, направив письменный запрос на адрес gdrive@smiledesign.com.cy.',
+                'В течение тридцати (30) дней после получения моего запроса Smile Design прекратит публиковать новые материалы с моим участием и удалит существующие материалы из каналов, находящихся под её непосредственным контролем, включая её аккаунты в социальных сетях, сайт и действующие платные рекламные кампании. Smile Design также уведомит Kaimakki Studio о необходимости принять соответствующие меры.',
+                'Материалы, которые были распространены третьими лицами или скачаны другими, могут оказаться невозможными для возврата или удаления, и я понимаю это ограничение.',
+                'Отзыв моего согласия никак не повлияет на моё текущее или будущее лечение в Smile Design.',
+              ],
+            },
           },
           {
-            id: 'explained', type: 'consent', required: true,
-            label: { en: 'The treatment, its alternatives and possible risks have been explained to me.', el: 'Μου εξηγήθηκαν η θεραπεία, οι εναλλακτικές της και οι πιθανοί κίνδυνοι.', ru: 'Мне объяснили суть лечения, альтернативные варианты и возможные риски.' },
-          },
-          {
-            id: 'questions', type: 'consent', required: true,
-            label: { en: 'I have had the chance to ask questions and they were answered.', el: 'Είχα την ευκαιρία να κάνω ερωτήσεις και πήρα απαντήσεις.', ru: 'У меня была возможность задать вопросы, и я получил(а) ответы.' },
-          },
-          {
-            id: 'cost', type: 'consent', required: true,
-            label: { en: 'I understand the estimated cost and that it may change if the treatment plan changes.', el: 'Κατανοώ το εκτιμώμενο κόστος και ότι μπορεί να αλλάξει αν αλλάξει το σχέδιο θεραπείας.', ru: 'Я понимаю ориентировочную стоимость и то, что она может измениться при изменении плана лечения.' },
-          },
-          {
-            id: 'anaesthesia', type: 'consent', required: true,
-            label: { en: 'I agree to local anaesthesia where needed.', el: 'Συμφωνώ με τη χρήση τοπικής αναισθησίας όπου χρειάζεται.', ru: 'Я согласен(на) на местную анестезию при необходимости.' },
+            id: 'noFace', type: 'consent', alert: 'NO FACE in media',
+            label: {
+              en: 'NO FACE: I do not wish my face to appear in any material used.',
+              el: 'ΟΧΙ ΠΡΟΣΩΠΟ: Δεν επιθυμώ να εμφανίζεται το πρόσωπό μου σε κανένα από το υλικό που θα χρησιμοποιηθεί.',
+              ru: 'БЕЗ ЛИЦА: я не хочу, чтобы моё лицо появлялось в каких-либо используемых материалах.',
+            },
           },
         ],
       },
     ],
-    declaration: {
-      en: 'I give my consent to the treatment described above.',
-      el: 'Δίνω τη συναίνεσή μου για την παραπάνω θεραπεία.',
-      ru: 'Я даю согласие на описанное выше лечение.',
-    },
-  },
-  {
-    id: 'privacy',
-    minutes: 1,
-    title: { en: 'Privacy and data consent', el: 'Προστασία προσωπικών δεδομένων', ru: 'Согласие на обработку данных' },
-    description: {
-      en: 'How we store and use your information.',
-      el: 'Πώς φυλάσσουμε και χρησιμοποιούμε τα στοιχεία σας.',
-      ru: 'Как мы храним и используем ваши данные.',
-    },
-    sections: [
-      {
-        title: { en: 'Your data', el: 'Τα δεδομένα σας', ru: 'Ваши данные' },
-        fields: [
-          {
-            id: 'processing', type: 'consent', required: true,
-            label: { en: 'I agree that Smile Design may keep and process my personal and health data to provide my dental care.', el: 'Συμφωνώ η Smile Design να διατηρεί και να επεξεργάζεται τα προσωπικά δεδομένα και τα δεδομένα υγείας μου για την παροχή οδοντιατρικής φροντίδας.', ru: 'Я согласен(на), что Smile Design хранит и обрабатывает мои персональные и медицинские данные для оказания стоматологической помощи.' },
-          },
-          {
-            id: 'contact', type: 'choice', required: true,
-            label: { en: 'How should we contact you about appointments?', el: 'Πώς προτιμάτε να επικοινωνούμε μαζί σας για τα ραντεβού;', ru: 'Как нам связываться с вами по поводу приёмов?' },
-            options: [
-              { id: 'phone', label: { en: 'Phone call', el: 'Τηλεφωνικά', ru: 'Звонок' } },
-              { id: 'sms', label: { en: 'SMS', el: 'SMS', ru: 'SMS' } },
-              { id: 'viber', label: { en: 'Viber', el: 'Viber', ru: 'Viber' } },
-              { id: 'email', label: { en: 'Email', el: 'Email', ru: 'Эл. почта' } },
-            ],
-          },
-          {
-            id: 'reminders', type: 'consent',
-            label: { en: 'Send me appointment reminders.', el: 'Θέλω να λαμβάνω υπενθυμίσεις για τα ραντεβού μου.', ru: 'Присылайте мне напоминания о приёмах.' },
-          },
-          {
-            id: 'photos', type: 'consent',
-            label: { en: "Clinical photos of my smile may be used anonymously for teaching or on the clinic's website.", el: 'Κλινικές φωτογραφίες του χαμόγελού μου μπορούν να χρησιμοποιηθούν ανώνυμα για εκπαιδευτικούς σκοπούς ή στην ιστοσελίδα της κλινικής.', ru: 'Клинические фото моей улыбки могут анонимно использоваться в учебных целях или на сайте клиники.' },
-          },
-        ],
-      },
-    ],
-    declaration: {
-      en: "I have read and understood the clinic's privacy notice.",
-      el: 'Διάβασα και κατανόησα την ενημέρωση απορρήτου της κλινικής.',
-      ru: 'Я прочитал(а) и понял(а) уведомление клиники о конфиденциальности.',
-    },
   },
 ]
 
@@ -209,6 +216,7 @@ export function alertsFor(formId, answers) {
     if (f.type === 'multi' && Array.isArray(v)) {
       for (const o of f.options) if (!o.none && v.includes(o.id)) out.push(o.label.en)
     }
+    if (f.type === 'consent' && v === true) out.push(f.alert)
   }
   return out
 }
@@ -222,6 +230,7 @@ export function validateAnswers(form, answers) {
   if (!answers || typeof answers !== 'object' || Array.isArray(answers)) return { error: 'answers' }
   const value = {}
   for (const f of fieldsOf(form)) {
+    if (f.type === 'info') continue
     const v = answers[f.id]
     const empty = v === undefined || v === null || v === '' || v === false || (Array.isArray(v) && v.length === 0)
     if (empty) {

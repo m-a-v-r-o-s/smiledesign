@@ -44,10 +44,11 @@ const listItem = s => ({
 
 function patientSummary(p) {
   const subs = db.submissions.filter(s => s.patientId === p.id)
-  const lastMedical = subs.filter(s => s.formId === 'medical-history').at(-1)
+  const latest = {} // latest signed copy of each form
+  for (const s of subs) latest[s.formId] = s
   return {
     ...p, formCount: subs.length, lastAt: subs.at(-1)?.submittedAt ?? null,
-    alerts: lastMedical ? alertsFor('medical-history', lastMedical.answers) : [],
+    alerts: Object.values(latest).flatMap(s => alertsFor(s.formId, s.answers)),
   }
 }
 

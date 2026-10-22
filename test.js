@@ -6,8 +6,8 @@ import { seed } from './seed.js'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgo='
 const medical = {
-  doctorCare: 'no', medications: 'yes', medicationsDetails: 'Метформин', anticoagulants: 'no', allergies: 'no',
-  conditions: ['diabetes'], smoker: 'no', lastVisit: 'lt6', anxiety: 'little',
+  gender: 'female', address: 'Amathountos 54', city: 'Лимассол',
+  conditions: ['diabetes'], allergies: 'no', medications: 'yes', medicationsDetails: 'Метформин',
 }
 const body = (over = {}) => ({
   lang: 'ru',
@@ -19,7 +19,7 @@ const body = (over = {}) => ({
 // --- validation ---
 assert.ok(validateSubmission(body()).value, 'valid body passes')
 assert.match(validateSubmission(body({ lang: 'de' })).error, /lang/)
-assert.match(validateSubmission(body({ forms: [{ formId: 'medical-history', answers: { ...medical, smoker: undefined }, signature: PNG }] })).error, /smoker: required/)
+assert.match(validateSubmission(body({ forms: [{ formId: 'medical-history', answers: { ...medical, gender: undefined }, signature: PNG }] })).error, /gender: required/)
 assert.match(validateSubmission(body({ forms: [{ formId: 'medical-history', answers: medical, signature: 'data:text/html,x' }] })).error, /signature/)
 assert.match(validateSubmission(body({ forms: [{ formId: 'nope', answers: {}, signature: PNG }] })).error, /unknown form/)
 assert.match(validateSubmission(body({ forms: [{ formId: 'medical-history', answers: { ...medical, conditions: ['none', 'heart'] }, signature: PNG }] })).error, /conditions/)
@@ -27,7 +27,10 @@ assert.match(validateSubmission(body({ patient: { ...body().patient, dob: '2999-
 const cleaned = validateSubmission(body({ forms: [{ formId: 'medical-history', answers: { ...medical, isAdmin: true, allergiesDetails: 'ignored, allergies is no' }, signature: PNG }] }))
 assert.equal(cleaned.value.forms[0].answers.isAdmin, undefined, 'unknown keys dropped')
 assert.equal(cleaned.value.forms[0].answers.allergiesDetails, undefined, 'details only kept on yes')
-assert.deepEqual(alertsFor('medical-history', medical), ['Medication: Метформин', 'Diabetes'])
+assert.deepEqual(alertsFor('medical-history', medical), ['Diabetes mellitus', 'Medication: Метформин'])
+assert.deepEqual(alertsFor('media-consent', { noFace: true }), ['NO FACE in media'])
+assert.ok(validateSubmission(body({ forms: [{ formId: 'media-consent', answers: {}, signature: PNG }] })).value, 'media consent without NO FACE is valid')
+assert.equal(validateSubmission(body({ forms: [{ formId: 'media-consent', answers: { terms: 'x' }, signature: PNG }] })).value.forms[0].answers.terms, undefined, 'info fields take no answer')
 
 // --- seed data is schema-valid ---
 const db = seed()
@@ -69,7 +72,7 @@ try {
   assert.equal(after.length, before.length, 'returning patient matched, no duplicate record')
   const list = await get('/api/submissions')
   assert.equal(list[0].patient.lastName, 'Смирнова')
-  assert.deepEqual(list[0].alerts, ['Medication: Метформин', 'Diabetes'])
+  assert.deepEqual(list[0].alerts, ['Diabetes mellitus', 'Medication: Метформин'])
   assert.equal(list[0].reviewedAt, null)
   assert.equal(list[0].signature, undefined, 'list responses are trimmed')
 

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FORMS, formById, tr, norm } from '../shared/forms.js'
+import Legal from './Legal.jsx'
 
 const TZ = 'Asia/Nicosia'
 const LANG = { en: 'English', el: 'Greek', ru: 'Russian' }
-const CLINIC = { address: '12 Achaion, Limassol 3022, Cyprus', phone: '25 376147', email: 'info@smiledesign.com.cy' }
+const CLINIC = { doctor: 'Dr. Kyriaki Georgiadou, DDS', address: '12 Achaion, Limassol 3022, Cyprus', phone: '25 376147', email: 'info@smiledesign.com.cy' }
 // Answer words in the patient's language, for "view as the patient saw it".
 const WORDS = {
   yes: { en: 'Yes', el: 'Ναι', ru: 'Да' },
@@ -170,7 +171,7 @@ function Login({ onDone }) {
 function Alerts({ alerts, compact }) {
   if (!alerts?.length) return compact ? <span className="muted">None</span> : null
   return (
-    <ul className={'alerts' + (compact ? ' compact' : '')} aria-label="Medical alerts">
+    <ul className={'alerts' + (compact ? ' compact' : '')} aria-label="Alerts">
       {alerts.map(a => <li key={a}>{a}</li>)}
     </ul>
   )
@@ -277,7 +278,7 @@ function Patients({ version, onUnauthorized }) {
       {!items.length ? <p className="empty">No patients match.</p> : (
         <div className="table-wrap">
           <table>
-            <thead><tr><th scope="col">Name</th><th scope="col">Date of birth</th><th scope="col">Phone</th><th scope="col">Forms</th><th scope="col">Last form</th><th scope="col">Medical alerts</th></tr></thead>
+            <thead><tr><th scope="col">Name</th><th scope="col">Date of birth</th><th scope="col">Phone</th><th scope="col">Forms</th><th scope="col">Last form</th><th scope="col">Alerts</th></tr></thead>
             <tbody>
               {items.map(p => (
                 <tr key={p.id} onClick={() => { location.hash = `/patients/${p.id}` }}>
@@ -315,8 +316,8 @@ function PatientPage({ id, version, onUnauthorized, fresh }) {
       </dl>
       {p.alerts.length > 0 && (
         <div className="alert-box">
-          <h2>Medical alerts</h2>
-          <p className="muted small">From the latest medical history.</p>
+          <h2>Alerts</h2>
+          <p className="muted small">From the latest signed copy of each form.</p>
           <Alerts alerts={p.alerts} />
         </div>
       )}
@@ -342,6 +343,7 @@ function answerText(f, answers, lang) {
 
 const flagged = (f, answers) => f.alert && (
   (f.type === 'yesno' && answers[f.id] === 'yes') ||
+  (f.type === 'consent' && answers[f.id] === true) ||
   (f.type === 'multi' && answers[f.id]?.some(id => !f.options.find(o => o.id === id)?.none)))
 
 function SubmissionPage({ id, version, onUnauthorized, bump }) {
@@ -384,7 +386,7 @@ function SubmissionPage({ id, version, onUnauthorized, bump }) {
       <article className="sheet" lang={lang}>
         <header className="letterhead">
           <img src="/logo.svg" alt="Smile Design Dental Clinic" width="170" height="84" />
-          <address lang="en">{CLINIC.address}<br />Tel. {CLINIC.phone} · {CLINIC.email}</address>
+          <address lang="en"><strong>{CLINIC.doctor}</strong><br />{CLINIC.address}<br />Tel. {CLINIC.phone} · {CLINIC.email}</address>
         </header>
 
         <div className="sheet-title">
@@ -403,7 +405,7 @@ function SubmissionPage({ id, version, onUnauthorized, bump }) {
 
         {s.alerts.length > 0 && (
           <div className="alert-box" lang="en">
-            <h2>Medical alerts</h2>
+            <h2>Alerts</h2>
             <Alerts alerts={s.alerts} />
           </div>
         )}
@@ -415,8 +417,9 @@ function SubmissionPage({ id, version, onUnauthorized, bump }) {
         {form.sections.map((sec, i) => (
           <section key={i} className="qa">
             <h2>{tr(sec.title, lang)}</h2>
+            {sec.fields.filter(f => f.type === 'info').map(f => <Legal key={f.id} blocks={tr(f.body, lang)} />)}
             <dl>
-              {sec.fields.map(f => (
+              {sec.fields.filter(f => f.type !== 'info').map(f => (
                 <div key={f.id} className={flagged(f, s.answers) ? 'flag' : undefined}>
                   <dt>{tr(f.label, lang)}</dt>
                   <dd>{answerText(f, s.answers, lang)}</dd>
@@ -427,7 +430,7 @@ function SubmissionPage({ id, version, onUnauthorized, bump }) {
         ))}
 
         <section className="qa signed">
-          <p className="declaration">{tr(form.declaration, lang)}</p>
+          {form.declaration && <p className="declaration">{tr(form.declaration, lang)}</p>}
           <img src={s.signature} alt={`Signature of ${fullName(s.patient)}`} className="signature" />
           <p className="small muted" lang="en">Signed by {fullName(s.patient)} on the clinic iPad, {fmtDateTime.format(new Date(s.submittedAt))} (Cyprus time). Ref {s.ref}.</p>
         </section>

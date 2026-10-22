@@ -15,7 +15,9 @@ This is a **clickable pitch demo with invented data**, not production. Started 2
 ## Layout
 
 - `shared/forms.js`: **the only place forms are defined** (3 languages: en, el, ru). It also holds the server-side
-  validation and the medical-alert extraction. The questions are PLACEHOLDER drafts until the clinic sends its real forms.
+  validation and the alert extraction. Two real forms from the clinic's paper originals (2026-10-22): the medical
+  form and the media consent (Kaimakki Studio). EN/EL are as printed (with three noted fixes in the file header),
+  RU is our translation and needs a native-speaker and legal check before real use.
 - `server.js`: dependency-free Node: static `dist/`, kiosk submit, passcode-gated admin API, live updates over SSE.
   Data is **in memory** and resets to `seed.js` on restart.
 - `seed.js`: invented patients (Greek, Russian, English names), deterministic. Never put real patient data here.

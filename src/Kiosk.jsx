@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { FORMS, LANGS, formById, fieldsOf, tr } from '../shared/forms.js'
 import SignaturePad from './SignaturePad.jsx'
+import Legal from './Legal.jsx'
 
 const IDLE_SECONDS = 120 // no touch for this long → "are you still there?"
 const IDLE_GRACE = 30 // then this long before everything is cleared
@@ -256,7 +257,7 @@ export default function Kiosk() {
             ))}
             <section className="k-section k-sign">
               <h2>{t('signature')}</h2>
-              <p>{tr(form.declaration, lang)}</p>
+              {form.declaration && <p>{tr(form.declaration, lang)}</p>}
               <SignaturePad
                 key={form.id}
                 value={signatures[form.id]}
@@ -352,7 +353,9 @@ function Field({ field: f, lang, t, answers, error, onChange }) {
   const label = tr(f.label, lang)
   const errId = error ? f.id + '-err' : undefined
   const err = error && <p className="field-error" id={errId}>{error}</p>
-  const opt = !f.required ?<span className="opt-tag"> ({t('optional')})</span> : null
+  const opt = !f.required ? <span className="opt-tag"> ({t('optional')})</span> : null
+
+  if (f.type === 'info') return <Legal blocks={tr(f.body, lang)} />
 
   if (f.type === 'text' || f.type === 'textarea' || f.type === 'date') {
     const Tag = f.type === 'textarea' ? 'textarea' : 'input'
@@ -362,7 +365,7 @@ function Field({ field: f, lang, t, answers, error, onChange }) {
         <Tag
           id={f.id} type={f.type === 'textarea' ? undefined : f.type} rows={f.type === 'textarea' ? 3 : undefined}
           value={v || ''} maxLength={f.type === 'textarea' ? 2000 : 200} onChange={e => onChange(f.id, e.target.value)}
-          autoComplete="off" aria-invalid={!!error} aria-describedby={errId}
+          autoComplete="off" inputMode={f.inputMode} aria-invalid={!!error} aria-describedby={errId}
         />
         {err}
       </div>
@@ -397,7 +400,7 @@ function Field({ field: f, lang, t, answers, error, onChange }) {
   return (
     <fieldset className="field" aria-invalid={!!error} aria-describedby={errId}>
       <legend>{label}{opt}</legend>
-      <div className={'options' + (f.type === 'yesno' ? ' yesno' : '')}>
+      <div className={'options' + (f.type === 'yesno' ? ' yesno' : '') + (options.length > 8 ? ' many' : '')}>
         {options.map(o => {
           const on = multi ? (v || []).includes(o.id) : v === o.id
           return (

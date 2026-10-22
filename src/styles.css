@@ -171,6 +171,16 @@ fieldset[aria-invalid=true] .option span { border-color: var(--alert); }
 }
 .options { display: flex; flex-wrap: wrap; gap: .6rem; }
 .options.yesno .option { flex: 1 1 0; max-width: 200px; }
+.options.many { display: grid; grid-template-columns: 1fr; gap: .5rem; }
+@media (min-width: 640px) { .options.many { grid-template-columns: 1fr 1fr; } }
+.options.many .option span { justify-content: flex-start; text-align: left; border-radius: 12px; min-height: 56px; padding: .5em 1em; font-size: .9em; }
+.legal { color: var(--ink); line-height: 1.6; }
+.legal p, .legal ul { margin: 0 0 1em; }
+.legal h3 { font-size: 1em; font-weight: 700; margin: 1.4em 0 .5em; }
+.legal ul { padding-left: 1.2em; }
+.legal li { margin-bottom: .5em; }
+.kiosk .legal { background: var(--paper); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 1.2em 1.4em .4em; margin-bottom: 1.4em; font-size: .9em; }
+.sheet .legal { font-size: .9em; padding-top: .8rem; }
 .option { position: relative; flex: 0 1 auto; }
 .option span {
   display: flex; align-items: center; justify-content: center; text-align: center;
