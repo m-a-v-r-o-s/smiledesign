@@ -23,9 +23,6 @@ const PATIENT = [
   { en: 'Email', el: 'Email', ru: 'Эл. почта', type: 'Email' },
 ]
 
-// Options that differ from the printed form, numbered as in the "changes" list.
-const NOTE = { atrialFibrillation: 1, cirrhosis: 2, none: 3 }
-
 function typeOf(f) {
   if (f.type === 'yesno') return f.details ? 'Ναι / Όχι, με «Ναι» γράφει ποια' : 'Ναι / Όχι'
   if (f.type === 'choice') return 'Μία επιλογή: ' + f.options.map(o => o.label.el).join(' / ')
@@ -52,7 +49,7 @@ function formSection(form, n) {
     html += `<h3>${esc(sec.title.el)}</h3><table>${HEAD}<tbody>`
     for (const f of sec.fields) {
       if (f.type === 'info') {
-        html += `<tr><td colspan="5" class="info">Το πλήρες κείμενο του εντύπου σας εμφανίζεται για ανάγνωση: ελληνικά και αγγλικά όπως είναι τυπωμένα (με την αλλαγή 6), ρωσικά σε δική μου μετάφραση (Παράρτημα).</td></tr>`
+        html += `<tr><td colspan="5" class="info">Το πλήρες κείμενο του εντύπου σας εμφανίζεται για ανάγνωση: ελληνικά και αγγλικά όπως είναι τυπωμένα, ρωσικά σε δική μου μετάφραση (Παράρτημα).</td></tr>`
         continue
       }
       html += row(f.label.el, f.label.en, f.label.ru, typeOf(f), f.required, f.alert)
@@ -63,8 +60,7 @@ function formSection(form, n) {
     if (multi) {
       html += `<h4>${esc(multi.label.el)}: οι ${multi.options.length} επιλογές</h4><table class="opts"><thead><tr><th>Ελληνικά</th><th>English</th><th>Русский</th></tr></thead><tbody>`
       for (const o of multi.options) {
-        const mark = NOTE[o.id] ? `<sup>${NOTE[o.id]}</sup>` : ''
-        html += `<tr><td class="el">${esc(o.label.el)}${mark}</td><td>${esc(o.label.en)}</td><td lang="ru">${esc(o.label.ru)}</td></tr>`
+        html += `<tr><td class="el">${esc(o.label.el)}</td><td>${esc(o.label.en)}</td><td lang="ru">${esc(o.label.ru)}</td></tr>`
       }
       html += '</tbody></table>'
     }
@@ -126,29 +122,6 @@ const html = `<!doctype html>
 <table>${HEAD}<tbody>${PATIENT.map(p => row(p.el, p.en, p.ru, p.type, true)).join('')}</tbody></table>
 
 ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
-
-<h2><span class="num">${FORMS.length + 2}</span>Τι άλλαξα σε σχέση με τα χάρτινα έντυπα</h2>
-<ol>
-  <li>Στο ελληνικό έντυπο, στη θέση του «Atrial Fibrillation» είναι τυπωμένο «Αρτηριακή Υπέρταση», που υπάρχει ήδη ως «Υπέρταση». Στην εφαρμογή γράφει «Κολπική μαρμαρυγή». Αξίζει να διορθωθεί και στο χαρτί.</li>
-  <li>Στο αγγλικό, το «Lever Cirrhosis» έγινε «Liver cirrhosis».</li>
-  <li>Πρόσθεσα την επιλογή «Κανένα από τα παραπάνω» και η λίστα παθήσεων είναι υποχρεωτική, ώστε να ξεχωρίζει ο ασθενής που δεν έχει τίποτα από αυτόν που απλώς την προσπέρασε.</li>
-  <li>Οι «Άλλες γνωστές αλλεργίες» και η «Λήψη φαρμάκων» έγιναν ερώτηση Ναι / Όχι. Με «Ναι», ο ασθενής γράφει ποια.</li>
-  <li>Το «Ονοματεπώνυμο» χωρίστηκε σε Όνομα και Επώνυμο, το email είναι υποχρεωτικό και η ημερομηνία συμπληρώνεται αυτόματα κατά την υπογραφή. Η ενότητα «Κατάσταση» λέγεται «Προσωπικά στοιχεία».</li>
-  <li>Στη συγκατάθεση πολυμέσων, το «θα γράψω «ΟΧΙ ΠΡΟΣΩΠΟ»» έγινε «θα επιλέξω», αφού στο iPad είναι τικ.</li>
-  <li>Τα ρωσικά είναι δική μου μετάφραση. Πριν χρησιμοποιηθούν με ασθενείς, χρειάζεται έλεγχο από κάποιον που μιλά ρωσικά, ειδικά το κείμενο της συγκατάθεσης (Παράρτημα).</li>
-</ol>
-
-<div class="box">
-  <h3>Χρειάζομαι την επιβεβαίωσή σας</h3>
-  <ol>
-    <li>Τα προαιρετικά πεδία είναι: Τ.Κ., άλλο τηλέφωνο, επαφή έκτακτης ανάγκης, επάγγελμα, «κάτι άλλο για την υγεία σας», θεράποντες ιατροί, ορθοδοντικός, «πώς μάθατε για εμάς». Θέλετε κάποιο από αυτά υποχρεωτικό, π.χ. την επαφή έκτακτης ανάγκης;</li>
-    <li>Το «Πώς μάθατε για την κλινική μας;» να μείνει ελεύθερο κείμενο ή να γίνει λίστα (Google, Instagram, Facebook, σύσταση φίλου, άλλος οδοντίατρος) ώστε να βγαίνουν στατιστικά;</li>
-    <li>Υπάρχουν κι άλλα έντυπα που δίνετε σήμερα σε χαρτί, π.χ. συγκατάθεση για συγκεκριμένη θεραπεία;</li>
-    <li>Ποιος μπορεί να ελέγξει τη ρωσική μετάφραση;</li>
-  </ol>
-</div>
-
-<p>Σημειώστε ό,τι θέλετε να αλλάξει πάνω στο PDF ή στείλτε μου τις αλλαγές γραπτώς, και τις περνάω στην εφαρμογή.</p>
 
 <div class="sign">
   <strong>Θεόδωρος Μαύρος</strong><br>Akos Digital Services<br>
