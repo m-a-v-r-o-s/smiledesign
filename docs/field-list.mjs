@@ -146,7 +146,7 @@ ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
 
 <div class="sign">
   <strong>Θεόδωρος Μαύρος</strong><br>Akos Digital Services<br>
-  <a href="mailto:info@akosds.com">info@akosds.com</a> · <a href="https://www.akosds.com">akosds.com</a>
+  <a href="tel:+306995358972">+30 699 535 8972</a> · <a href="mailto:info@akosds.com">info@akosds.com</a> · <a href="https://www.akosds.com">akosds.com</a>
 </div>
 
 </section>
