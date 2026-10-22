@@ -134,8 +134,8 @@ ${FORMS.map((f, i) => formSection(f, i + 2)).join('')}
 
 <h3>Κόστος και φιλοξενία</h3>
 <table class="costs"><tbody>
+  <tr><td class="el">Εφαρμογή ψηφιακών εντύπων (iPad και διαχείριση)</td><td class="price">300 €, πληρωμή με την παράδοση</td></tr>
   <tr><td class="el">Αυτόματη αποστολή email με κάθε συμπλήρωση</td><td class="price">100 € επιπλέον, εφάπαξ</td></tr>
-  <tr><td class="el">Διεύθυνση εφαρμογής</td><td class="price">Χωρίς κόστος</td></tr>
   <tr><td class="el">Φιλοξενία (Railway, servers στην Ευρώπη)</td><td class="price">Έως 5 € τον μήνα</td></tr>
 </tbody></table>
 <ul class="notes">
