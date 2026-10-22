@@ -10,18 +10,18 @@ const pick = a => a[Math.floor(r() * a.length)]
 const chance = p => r() < p
 
 const PATIENTS = [
-  ['Andreas', 'Georgiou', '1979-03-14', '+357 99 412387', 'en', 'm'],
-  ['Ελένη', 'Κωνσταντίνου', '1986-11-02', '+357 96 238415', 'el', 'f'],
-  ['Μάριος', 'Χαραλάμπους', '1971-06-25', '+357 99 873120', 'el', 'm'],
-  ['Christina', 'Michael', '1992-01-19', '+357 97 640233', 'el', 'f'],
-  ['Ольга', 'Смирнова', '1983-08-07', '+357 96 115902', 'ru', 'f'],
-  ['Дмитрий', 'Волков', '1975-12-30', '+357 99 507648', 'ru', 'm'],
-  ['Anna', 'Kuznetsova', '1995-04-11', '+357 97 321904', 'ru', 'f'],
-  ['Σοφία', 'Νεοφύτου', '1968-09-23', '+357 99 284716', 'el', 'f'],
-  ['James', 'Whitfield', '1958-02-05', '+44 7700 900417', 'en', 'm'],
-  ['Katerina', 'Ioannou', '2001-07-16', '+357 96 902351', 'en', 'f'],
-  ['Николай', 'Петров', '1964-10-28', '+357 97 188420', 'ru', 'm'],
-  ['Παναγιώτα', 'Ευαγγέλου', '1989-05-03', '+357 99 731058', 'el', 'f'],
+  ['Andreas', 'Georgiou', '1979-03-14', '+357 99 412387', 'en', 'm', 'andreas.georgiou@example.com'],
+  ['Ελένη', 'Κωνσταντίνου', '1986-11-02', '+357 96 238415', 'el', 'f', 'eleni.konst@example.com'],
+  ['Μάριος', 'Χαραλάμπους', '1971-06-25', '+357 99 873120', 'el', 'm', 'marios.ch@example.com'],
+  ['Christina', 'Michael', '1992-01-19', '+357 97 640233', 'el', 'f', 'christina.michael@example.com'],
+  ['Ольга', 'Смирнова', '1983-08-07', '+357 96 115902', 'ru', 'f', 'olga.smirnova@example.com'],
+  ['Дмитрий', 'Волков', '1975-12-30', '+357 99 507648', 'ru', 'm', 'd.volkov@example.com'],
+  ['Anna', 'Kuznetsova', '1995-04-11', '+357 97 321904', 'ru', 'f', 'anna.kuznetsova@example.com'],
+  ['Σοφία', 'Νεοφύτου', '1968-09-23', '+357 99 284716', 'el', 'f', 'sofia.neophytou@example.com'],
+  ['James', 'Whitfield', '1958-02-05', '+44 7700 900417', 'en', 'm', 'j.whitfield@example.com'],
+  ['Katerina', 'Ioannou', '2001-07-16', '+357 96 902351', 'en', 'f', 'katerina.ioannou@example.com'],
+  ['Николай', 'Петров', '1964-10-28', '+357 97 188420', 'ru', 'm', 'n.petrov@example.com'],
+  ['Παναγιώτα', 'Ευαγγέλου', '1989-05-03', '+357 99 731058', 'el', 'f', 'p.evangelou@example.com'],
 ]
 
 const TEXT = {
@@ -88,9 +88,9 @@ export function seed(now = Date.now()) {
       reviewedAt: reviewed ? new Date(at + DAY / 24).toISOString() : null,
     }))
   }
-  PATIENTS.forEach(([firstName, lastName, dob, phone, lang, g], i) => {
+  PATIENTS.forEach(([firstName, lastName, dob, phone, lang, g, email]) => {
     const first = now - (40 + r() * 500) * DAY
-    const p = { id: randomUUID(), firstName, lastName, dob, phone, email: i % 3 ? '' : `${lastName.toLowerCase()}@example.com`, createdAt: new Date(first).toISOString() }
+    const p = { id: randomUUID(), firstName, lastName, dob, phone, email, createdAt: new Date(first).toISOString() }
     patients.push(p)
     gender[p.id] = g === 'f' ? 'female' : 'male'
     add(p, lang, chance(0.5) ? ['medical-history', 'media-consent'] : ['medical-history'], first, true)

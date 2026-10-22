@@ -266,7 +266,7 @@ export function validateSubmission(body) {
   if (!str(p.firstName, 80) || !str(p.lastName, 80)) return { error: 'name' }
   if (!isDate(p.dob) || p.dob < '1900-01-01' || Date.parse(p.dob) > Date.now()) return { error: 'dob' }
   if (typeof p.phone !== 'string' || !/^\+?[\d\s()-]{6,20}$/.test(p.phone.trim())) return { error: 'phone' }
-  if (p.email && (typeof p.email !== 'string' || p.email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email.trim()))) return { error: 'email' }
+  if (typeof p.email !== 'string' || p.email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email.trim())) return { error: 'email' }
   if (!Array.isArray(forms) || forms.length < 1 || forms.length > FORMS.length) return { error: 'forms' }
   if (new Set(forms.map(f => f?.formId)).size !== forms.length) return { error: 'forms: duplicate' }
   const out = []
@@ -285,7 +285,7 @@ export function validateSubmission(body) {
       lang,
       patient: {
         firstName: p.firstName.trim(), lastName: p.lastName.trim(), dob: p.dob,
-        phone: p.phone.trim(), email: p.email ? p.email.trim() : '',
+        phone: p.phone.trim(), email: p.email.trim(),
       },
       forms: out,
     },

@@ -62,7 +62,7 @@ const EMPTY_PATIENT = { firstName: '', lastName: '', dob: '', phone: '', email: 
 
 function detailErrors(p) {
   const e = {}
-  for (const k of ['firstName', 'lastName', 'dob', 'phone']) if (!p[k].trim()) e[k] = 'requiredField'
+  for (const k of ['firstName', 'lastName', 'dob', 'phone', 'email']) if (!p[k].trim()) e[k] = 'requiredField'
   if (p.dob && (p.dob < '1900-01-01' || p.dob > today())) e.dob = 'badDate'
   if (p.phone.trim() && !/^\+?[\d\s()-]{6,20}$/.test(p.phone.trim())) e.phone = 'badPhone'
   if (p.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email.trim())) e.email = 'badEmail'
@@ -238,7 +238,7 @@ export default function Kiosk() {
               <TextInput id="phone" type="tel" inputMode="tel" label={t('phone')} value={patient.phone} error={errors.phone && t(errors.phone)} maxLength={20} placeholder="+357"
                 onChange={v => { setPatient(p => ({ ...p, phone: v })); setErrors(e => ({ ...e, phone: undefined })) }} />
             </div>
-            <TextInput id="email" type="email" inputMode="email" label={`${t('email')} (${t('optional')})`} value={patient.email} error={errors.email && t(errors.email)} maxLength={120}
+            <TextInput id="email" type="email" inputMode="email" label={t('email')} value={patient.email} error={errors.email && t(errors.email)} maxLength={120}
               onChange={v => { setPatient(p => ({ ...p, email: v })); setErrors(e => ({ ...e, email: undefined })) }} />
           </>
         )}

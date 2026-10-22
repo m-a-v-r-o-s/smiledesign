@@ -11,7 +11,7 @@ const medical = {
 }
 const body = (over = {}) => ({
   lang: 'ru',
-  patient: { firstName: 'Ольга', lastName: 'Смирнова', dob: '1983-08-07', phone: '+357 96 115902', email: '' },
+  patient: { firstName: 'Ольга', lastName: 'Смирнова', dob: '1983-08-07', phone: '+357 96 115902', email: 'olga.smirnova@example.com' },
   forms: [{ formId: 'medical-history', answers: medical, signature: PNG }],
   ...over,
 })
@@ -19,6 +19,7 @@ const body = (over = {}) => ({
 // --- validation ---
 assert.ok(validateSubmission(body()).value, 'valid body passes')
 assert.match(validateSubmission(body({ lang: 'de' })).error, /lang/)
+assert.match(validateSubmission(body({ patient: { ...body().patient, email: '' } })).error, /email/, 'email is required')
 assert.match(validateSubmission(body({ forms: [{ formId: 'medical-history', answers: { ...medical, gender: undefined }, signature: PNG }] })).error, /gender: required/)
 assert.match(validateSubmission(body({ forms: [{ formId: 'medical-history', answers: medical, signature: 'data:text/html,x' }] })).error, /signature/)
 assert.match(validateSubmission(body({ forms: [{ formId: 'nope', answers: {}, signature: PNG }] })).error, /unknown form/)
@@ -61,7 +62,7 @@ try {
   // Same person, typed in Latin script with different phone formatting: must match the seeded Cyrillic record by phone + DOB.
   const res = await fetch(url('/api/submissions'), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body({ patient: { firstName: 'Olga', lastName: 'Smirnova', dob: '1983-08-07', phone: '96115902', email: '' } })),
+    body: JSON.stringify(body({ patient: { firstName: 'Olga', lastName: 'Smirnova', dob: '1983-08-07', phone: '96115902', email: 'olga.smirnova@example.com' } })),
   })
   assert.equal(res.status, 201)
   let streamed = ''
