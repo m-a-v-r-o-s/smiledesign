@@ -6,7 +6,8 @@
     "dev": "vite --port 3002",
     "build": "vite build",
     "start": "node server.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "demo": "vite build && node demo/record.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",
+    "playwright-core": "^1.64.1",
     "vite": "^8.3.5"
   }
 }
