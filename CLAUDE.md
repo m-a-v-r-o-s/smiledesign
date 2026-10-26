@@ -12,7 +12,8 @@ Started 2026-10-21 as a pitch demo; on 2026-10-26 it got a Postgres backend for 
 - Data: with `DATABASE_URL` + `DATA_KEY` set it uses Postgres (`store.js`, `schema.sql`); without them it runs
   in memory on the invented seed (local demo, `npm test`). `.env` is loaded by `npm start` and holds the local values.
 - Hosting (test): Railway project `smiledesign`, Amsterdam (europe-west4): service `Postgres` (no public endpoint,
-  only reachable on the private network) and service `web` (this repo, health check `/healthz`). `web` connects as
+  only reachable on the private network) and service `web` (this repo, branch `master`, deploys on push, health check `/healthz`),
+  live at https://web-production-be3737.up.railway.app. `web` connects as
   the least-privilege `smiledesign_app` role over `postgres.railway.internal`. To run SQL as the owner, add a TCP proxy
   to `Postgres` for the session and delete it afterwards.
 - Supabase later (the free org was full on 2026-10-26): apply `schema.sql` (it also locks out the anon/authenticated
