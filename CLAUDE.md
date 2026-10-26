@@ -2,18 +2,22 @@
 
 Prospective client: Smile Design Dental Clinic, 12 Achaion, Limassol (smiledesign.com.cy).
 Patients fill in and sign forms on an iPad, and the clinic sees every signed form live on a desktop dashboard.
-Started 2026-10-21 as a pitch demo; on 2026-10-26 it got a Supabase backend for a live test deployment.
+Started 2026-10-21 as a pitch demo; on 2026-10-26 it got a Postgres backend for a live test deployment.
 
 ## Run
 
 - `npm run build && npm start`: build, then serve everything on :3001 (`/kiosk`, `/admin`, `/` launcher).
 - `npm run dev`: Vite with HMR (proxies `/api` to the `npm start` server on :3001).
 - `npm test`: schema validation, seed integrity, end-to-end API pass (spawns its own server on :3099).
-- Data: with `DATABASE_URL` + `DATA_KEY` set it uses Supabase Postgres (`store.js`, `schema.sql`); without them it runs
+- Data: with `DATABASE_URL` + `DATA_KEY` set it uses Postgres (`store.js`, `schema.sql`); without them it runs
   in memory on the invented seed (local demo, `npm test`). `.env` is loaded by `npm start` and holds the local values.
-- Supabase setup: apply `schema.sql`, then `alter role smiledesign_app password '<random>'` and connect as that role
-  through the session pooler: `postgres://smiledesign_app.<ref>:<pw>@<pooler host>:5432/postgres?sslmode=require`.
-  The app never uses the anon or service-role key. Answers and signatures are AES-256-GCM encrypted with `DATA_KEY`
+- Hosting (test): Railway project `smiledesign`, Amsterdam (europe-west4): service `Postgres` (no public endpoint,
+  only reachable on the private network) and service `web` (this repo, health check `/healthz`). `web` connects as
+  the least-privilege `smiledesign_app` role over `postgres.railway.internal`. To run SQL as the owner, add a TCP proxy
+  to `Postgres` for the session and delete it afterwards.
+- Supabase later (the free org was full on 2026-10-26): apply `schema.sql` (it also locks out the anon/authenticated
+  API roles there), set the app role password, connect via the session pooler as `smiledesign_app.<ref>`, and move the
+  data with pg_dump/restore. The app never uses the anon or service-role key. Answers and signatures are AES-256-GCM encrypted with `DATA_KEY`
   (32 bytes, base64): **lose that key and every signed form is unreadable**, keep a copy outside Railway.
 - Admin password: chosen by the clinic on first sign-in at `/admin`, which needs the one-time setup code the server
   prints to its log at startup (random per boot, or set `SETUP_CODE`). Stored as a scrypt hash in the `settings` table.

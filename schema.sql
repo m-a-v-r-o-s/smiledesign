@@ -1,5 +1,5 @@
--- Smile Design patient forms, Supabase Postgres (EU). Only the server touches it, as the smiledesign_app role.
--- RLS is on and only smiledesign_app has a policy: the Supabase API (anon/authenticated keys) sees nothing.
+-- Smile Design patient forms, Postgres in the EU (Railway for the test, Supabase later). Only the server touches it,
+-- as the smiledesign_app role. RLS is on and only smiledesign_app has a policy: on Supabase the API keys see nothing.
 -- After applying, give the role a password once (never commit it): alter role smiledesign_app password '...';
 
 create table patients (
@@ -30,7 +30,12 @@ create table settings (
   value jsonb not null
 );
 
-revoke all on patients, submissions, settings from anon, authenticated;
+-- Supabase only: lock out its API roles (plain Postgres, e.g. Railway, has no such roles).
+do $$ begin
+  if exists (select from pg_roles where rolname = 'anon') then
+    revoke all on patients, submissions, settings from anon, authenticated;
+  end if;
+end $$;
 alter table patients enable row level security;
 alter table submissions enable row level security;
 alter table settings enable row level security;

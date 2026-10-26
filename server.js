@@ -255,6 +255,6 @@ http.createServer(async (req, res) => {
     if (!e.status) console.error(e)
   }
 }).listen(PORT, () => {
-  console.log(`Smile Design forms on http://localhost:${PORT}  (kiosk: /kiosk, admin: /admin), data: ${store.persistent ? 'Supabase' : 'in memory, demo seed'}`)
+  console.log(`Smile Design forms on http://localhost:${PORT}  (kiosk: /kiosk, admin: /admin), data: ${store.persistent ? 'Postgres' : 'in memory, demo seed'}`)
   if (!admin) console.log(`Admin setup code (first sign-in only, to choose the password): ${SETUP_CODE}`)
 })
