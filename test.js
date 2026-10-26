@@ -1,12 +1,11 @@
 // npm test: schema validation, seed integrity, and an end-to-end pass against a real server process.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtempSync, readFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { randomBytes } from 'node:crypto'
 import { FORMS, validateSubmission, validateAnswers, alertsFor } from './shared/forms.js'
 import { seed } from './seed.js'
 import { renderEmail } from './email.js'
+import { enc, dec } from './store.js'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgo='
 const medical = {
@@ -45,6 +44,13 @@ assert.doesNotMatch(mail.html, /<b>Ольга/)
 assert.match(mail.text, /Медицинская анкета \(SD-00042\), 26 окт\. 2026 г\., 12:00/, 'title, ref and Cyprus local time')
 assert.doesNotMatch(mail.html + mail.text, /diabetes|Метформин/i, 'no answers in the email')
 
+// --- at-rest encryption ---
+const key = randomBytes(32)
+const sealed = enc('{"conditions":["hiv"]}', key)
+assert.equal(dec(sealed, key), '{"conditions":["hiv"]}')
+assert.doesNotMatch(Buffer.from(sealed, 'base64').toString('latin1'), /hiv/, 'ciphertext hides the answers')
+assert.throws(() => dec(sealed, randomBytes(32)), 'wrong key fails, never returns garbage')
+
 // --- seed data is schema-valid ---
 const db = seed()
 for (const s of db.submissions) {
@@ -54,8 +60,7 @@ for (const s of db.submissions) {
 
 // --- end to end ---
 const PORT = 3099
-const DATA_DIR = mkdtempSync(join(tmpdir(), 'sd-test-'))
-const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, SETUP_CODE: 'setup-123', DATA_DIR, RESEND_API_KEY: '' }, stdio: 'ignore' })
+const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, SETUP_CODE: 'setup-123', DATABASE_URL: '', RESEND_API_KEY: '' }, stdio: 'ignore' })
 const url = p => `http://localhost:${PORT}${p}`
 try {
   for (let i = 0; i < 50; i++) {
@@ -69,7 +74,6 @@ try {
   assert.equal((await post('/api/login', { code: 'setup-123', password: 'short' })).status, 400, 'min 12 chars')
   assert.equal((await post('/api/login', { code: 'setup-123', password: 'clinic password 1' })).status, 200, 'password chosen')
   assert.deepEqual(await fetch(url('/api/auth')).then(r => r.json()), { setup: false })
-  assert.doesNotMatch(readFileSync(join(DATA_DIR, 'admin.json'), 'utf8'), /clinic password/, 'stored hashed')
   assert.equal((await post('/api/login', { code: 'setup-123', password: 'another password 2' })).status, 403, 'setup code cannot reset it')
   assert.equal((await post('/api/login', { password: 'wrong password' })).status, 403)
   const login = await post('/api/login', { password: 'clinic password 1' })

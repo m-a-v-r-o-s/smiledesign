@@ -1,26 +1,25 @@
 // Server: serves the built app (dist/), the kiosk submit endpoint and the admin API.
-// ponytail: data lives in memory and resets to the seed on restart. The MVP swaps this for Supabase (EU).
+// Data: Supabase Postgres via store.js when DATABASE_URL is set, otherwise in memory with the invented seed.
 import http from 'node:http'
-import { createReadStream, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { randomUUID, randomBytes, timingSafeEqual, createHash, scrypt } from 'node:crypto'
 import { promisify } from 'node:util'
-import { dirname, extname, join, normalize } from 'node:path'
+import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateSubmission, alertsFor, norm } from './shared/forms.js'
-import { seed } from './seed.js'
+import * as store from './store.js'
 import { sendConfirmation } from './email.js'
 
 const PORT = Number(process.env.PORT) || 3001
 const DIST = fileURLToPath(new URL('./dist/', import.meta.url))
-const db = process.env.SEED === 'off' ? { patients: [], submissions: [] } : seed()
+const db = await store.load()
+let refSeq = Math.max(0, ...db.submissions.map(s => Number(s.ref.slice(3))))
 
 // Admin password: the clinic chooses it on first sign-in, proving it with the one-time setup code from the server log.
-// Stored as a salted scrypt hash in DATA_DIR (a Railway volume), so it survives restarts.
-const ADMIN_FILE = join(process.env.DATA_DIR || fileURLToPath(new URL('./data/', import.meta.url)), 'admin.json')
+// Stored as a salted scrypt hash in the settings table, so it survives restarts.
 const SETUP_CODE = process.env.SETUP_CODE || randomBytes(5).toString('hex')
-let admin = null
-try { admin = JSON.parse(readFileSync(ADMIN_FILE, 'utf8')) } catch {}
+let admin = db.admin
 const scryptAsync = promisify(scrypt)
 const hashPassword = async (pw, salt) => scryptAsync(pw, Buffer.from(salt, 'hex'), 64)
 const sessions = new Set()
@@ -31,18 +30,10 @@ const listeners = new Set()
 const digits = s => s.replace(/\D/g, '').slice(-8)
 
 // Same date of birth plus the same name or the same phone number = the same patient.
-function findOrCreatePatient(p) {
+function findPatient(p) {
   const name = norm(p.firstName + ' ' + p.lastName)
-  const found = db.patients.find(x => x.dob === p.dob &&
+  return db.patients.find(x => x.dob === p.dob &&
     (norm(x.firstName + ' ' + x.lastName) === name || digits(x.phone) === digits(p.phone)))
-  if (found) {
-    found.phone = p.phone
-    if (p.email) found.email = p.email
-    return found
-  }
-  const created = { id: randomUUID(), ...p, createdAt: new Date().toISOString() }
-  db.patients.push(created)
-  return created
 }
 
 const patientOf = s => db.patients.find(p => p.id === s.patientId)
@@ -128,17 +119,18 @@ async function api(req, res, path) {
     if (limited(req, 'submit', 20)) return send(res, 429, { error: 'Too many requests' })
     const v = validateSubmission(await readJson(req, 3_000_000))
     if (v.error) return send(res, 400, { error: v.error })
-    const patient = findOrCreatePatient(v.value.patient)
+    const p = v.value.patient, found = findPatient(p)
+    const patient = found ? { ...found, phone: p.phone, email: p.email } : { id: randomUUID(), ...p, createdAt: new Date().toISOString() }
     const now = Date.now()
-    const created = v.value.forms.map((f, i) => {
-      const s = {
-        id: randomUUID(), ref: 'SD-' + String(db.submissions.length + 1).padStart(5, '0'),
-        patientId: patient.id, formId: f.formId, lang: v.value.lang, answers: f.answers,
-        signature: f.signature, submittedAt: new Date(now + i).toISOString(), reviewedAt: null,
-      }
-      db.submissions.push(s)
-      return s
-    })
+    const created = v.value.forms.map((f, i) => ({
+      id: randomUUID(), ref: 'SD-' + String(++refSeq).padStart(5, '0'),
+      patientId: patient.id, formId: f.formId, lang: v.value.lang, answers: f.answers,
+      signature: f.signature, submittedAt: new Date(now + i).toISOString(), reviewedAt: null,
+    }))
+    await store.saveSubmission(patient, !found, created) // saved before we answer the iPad
+    if (found) Object.assign(found, patient)
+    else db.patients.push(patient)
+    db.submissions.push(...created.map(({ signature, ...s }) => store.persistent ? s : { ...s, signature }))
     broadcast('submission', created.map(listItem))
     sendConfirmation(v.value.patient, v.value.lang, created).catch(e => console.error('email:', e.message))
     return send(res, 201, { ok: true, count: created.length })
@@ -156,10 +148,9 @@ async function api(req, res, path) {
       if (password.length < 12) return send(res, 400, { error: 'Choose a password of at least 12 characters' })
       const salt = randomBytes(16).toString('hex')
       const hash = (await hashPassword(password, salt)).toString('hex')
-      if (admin) return send(res, 409, { error: 'Password already set' })
-      admin = { salt, hash, setAt: new Date().toISOString() }
-      mkdirSync(dirname(ADMIN_FILE), { recursive: true })
-      writeFileSync(ADMIN_FILE, JSON.stringify(admin), { mode: 0o600 })
+      const next = { salt, hash, setAt: new Date().toISOString() }
+      if (admin || !await store.setAdmin(next)) return send(res, 409, { error: 'Password already set' })
+      admin = next
       sessions.clear()
       console.log('security: admin password set')
     } else if (!timingSafeEqual(await hashPassword(password, admin.salt), Buffer.from(admin.hash, 'hex'))) {
@@ -197,11 +188,16 @@ async function api(req, res, path) {
   if (sub) {
     const s = db.submissions.find(x => x.id === sub[1])
     if (!s) return send(res, 404, { error: 'Not found' })
-    if (m === 'GET') return send(res, 200, { ...s, alerts: alertsFor(s.formId, s.answers), patient: patientOf(s) })
+    if (m === 'GET') {
+      const signature = s.signature ?? await store.signatureOf(s.id)
+      return send(res, 200, { ...s, signature, alerts: alertsFor(s.formId, s.answers), patient: patientOf(s) })
+    }
     if (m === 'PATCH') {
       const { reviewed } = await readJson(req, 1000)
       if (typeof reviewed !== 'boolean') return send(res, 400, { error: 'reviewed must be boolean' })
-      s.reviewedAt = reviewed ? new Date().toISOString() : null
+      const reviewedAt = reviewed ? new Date().toISOString() : null
+      await store.setReviewed(s.id, reviewedAt)
+      s.reviewedAt = reviewedAt
       broadcast('review', { id: s.id, reviewedAt: s.reviewedAt })
       return send(res, 200, { reviewedAt: s.reviewedAt })
     }
@@ -250,7 +246,7 @@ async function serveStatic(req, res, path) {
 http.createServer(async (req, res) => {
   const path = new URL(req.url, 'http://x').pathname
   try {
-    if (path === '/healthz') return send(res, 200, 'ok')
+    if (path === '/healthz') return await store.ping().then(() => send(res, 200, 'ok'), () => send(res, 503, 'database unreachable'))
     if (path.startsWith('/api/')) return await api(req, res, path)
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed')
     await serveStatic(req, res, path)
@@ -259,6 +255,6 @@ http.createServer(async (req, res) => {
     if (!e.status) console.error(e)
   }
 }).listen(PORT, () => {
-  console.log(`Smile Design forms demo on http://localhost:${PORT}  (kiosk: /kiosk, admin: /admin)`)
+  console.log(`Smile Design forms on http://localhost:${PORT}  (kiosk: /kiosk, admin: /admin), data: ${store.persistent ? 'Supabase' : 'in memory, demo seed'}`)
   if (!admin) console.log(`Admin setup code (first sign-in only, to choose the password): ${SETUP_CODE}`)
 })

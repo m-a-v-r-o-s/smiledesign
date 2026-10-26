@@ -2,18 +2,23 @@
 
 Prospective client: Smile Design Dental Clinic, 12 Achaion, Limassol (smiledesign.com.cy).
 Patients fill in and sign forms on an iPad, and the clinic sees every signed form live on a desktop dashboard.
-This is a **clickable pitch demo with invented data**, not production. Started 2026-10-21.
+Started 2026-10-21 as a pitch demo; on 2026-10-26 it got a Supabase backend for a live test deployment.
 
 ## Run
 
 - `npm run build && npm start`: build, then serve everything on :3001 (`/kiosk`, `/admin`, `/` launcher).
 - `npm run dev`: Vite with HMR (proxies `/api` to the `npm start` server on :3001).
 - `npm test`: schema validation, seed integrity, end-to-end API pass (spawns its own server on :3099).
+- Data: with `DATABASE_URL` + `DATA_KEY` set it uses Supabase Postgres (`store.js`, `schema.sql`); without them it runs
+  in memory on the invented seed (local demo, `npm test`). `.env` is loaded by `npm start` and holds the local values.
+- Supabase setup: apply `schema.sql`, then `alter role smiledesign_app password '<random>'` and connect as that role
+  through the session pooler: `postgres://smiledesign_app.<ref>:<pw>@<pooler host>:5432/postgres?sslmode=require`.
+  The app never uses the anon or service-role key. Answers and signatures are AES-256-GCM encrypted with `DATA_KEY`
+  (32 bytes, base64): **lose that key and every signed form is unreadable**, keep a copy outside Railway.
 - Admin password: chosen by the clinic on first sign-in at `/admin`, which needs the one-time setup code the server
-  prints to its log at startup (random per boot, or set `SETUP_CODE`). Stored as a scrypt hash in `DATA_DIR/admin.json`
-  (default `./data/`; on Railway mount a volume and point `DATA_DIR` at it, or the password resets on every deploy).
-  To reset it: delete that file and restart. 5 wrong attempts in a row lock sign-in for 30s, doubling, max 15 min.
-- `SEED=off` starts with no invented patients (the test deployment); unset keeps the pitch-demo seed.
+  prints to its log at startup (random per boot, or set `SETUP_CODE`). Stored as a scrypt hash in the `settings` table.
+  To reset it: `delete from settings where key = 'admin'` as postgres, restart. 5 wrong attempts in a row lock sign-in
+  for 30s, doubling, max 15 min.
 - Patient confirmation email (`email.js`): set `RESEND_API_KEY` (in `.env` locally, `npm start` loads it). Without it
   no mail is sent. Sender defaults to `forms@akosds.com` (verified in Resend, EU); `MAIL_FROM` overrides it once the
   clinic's own domain is set up. The email lists form titles and refs only, never answers.
@@ -26,7 +31,7 @@ This is a **clickable pitch demo with invented data**, not production. Started 2
   form and the media consent (Kaimakki Studio). EN/EL are as printed (with three noted fixes in the file header),
   RU is our translation and needs a native-speaker and legal check before real use.
 - `server.js`: dependency-free Node: static `dist/`, kiosk submit, password-gated admin API, live updates over SSE.
-  Data is **in memory** and resets to `seed.js` on restart.
+  Keeps all rows except signatures in memory and writes through to the database before answering (single instance).
 - `seed.js`: invented patients (Greek, Russian, English names), deterministic. Never put real patient data here.
 - `src/Kiosk.jsx` (iPad), `src/Admin.jsx` (desktop), `src/SignaturePad.jsx`, `src/styles.css` (brand tokens on `:root`).
 
@@ -37,9 +42,7 @@ Gold `#b18435` (decorative only, 3.4:1), text/buttons gold `#8c6421` (5.3:1), ch
 
 ## Before this becomes a real product (MVP)
 
-- Supabase in an EU region (health data is GDPR special-category), RLS on every table, signatures in a private bucket.
 - Staff auth with email OTP, per-user accounts, audit log of who opened/printed which form (today: one shared password).
-- Patients and forms are still in memory: a restart or deploy wipes them.
 - Server-generated PDF stored at signing time (the browser print is fine for the demo).
 - iPad pairing token so only the clinic's iPad can submit.
 - Ops health check (`/healthz` exists; add `/api/health/ops` once there is a database).
