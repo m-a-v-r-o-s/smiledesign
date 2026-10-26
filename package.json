@@ -5,13 +5,13 @@
   "scripts": {
     "dev": "vite --port 3002",
     "build": "vite build",
-    "start": "node server.js",
+    "start": "node --env-file-if-exists=.env server.js",
     "test": "node test.js",
     "demo": "vite build && node demo/record.mjs",
     "fields": "node docs/field-list.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.9"
   },
   "dependencies": {
     "@fontsource/open-sans": "^5.3.0",

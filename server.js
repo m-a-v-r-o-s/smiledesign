@@ -8,6 +8,7 @@ import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateSubmission, alertsFor, norm } from './shared/forms.js'
 import { seed } from './seed.js'
+import { sendConfirmation } from './email.js'
 
 const PORT = Number(process.env.PORT) || 3001
 const PASSCODE = process.env.DEMO_PASSCODE || 'smile2026'
@@ -122,6 +123,7 @@ async function api(req, res, path) {
       return s
     })
     broadcast('submission', created.map(listItem))
+    sendConfirmation(v.value.patient, v.value.lang, created).catch(e => console.error('email:', e.message))
     return send(res, 201, { ok: true, count: created.length })
   }
 

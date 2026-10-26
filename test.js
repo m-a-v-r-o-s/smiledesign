@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { FORMS, validateSubmission, validateAnswers, alertsFor } from './shared/forms.js'
 import { seed } from './seed.js'
+import { renderEmail } from './email.js'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgo='
 const medical = {
@@ -33,6 +34,14 @@ assert.deepEqual(alertsFor('media-consent', { noFace: true }), ['NO FACE in medi
 assert.ok(validateSubmission(body({ forms: [{ formId: 'media-consent', answers: {}, signature: PNG }] })).value, 'media consent without NO FACE is valid')
 assert.equal(validateSubmission(body({ forms: [{ formId: 'media-consent', answers: { terms: 'x' }, signature: PNG }] })).value.forms[0].answers.terms, undefined, 'info fields take no answer')
 
+// --- confirmation email ---
+const mail = renderEmail({ firstName: '<b>Ольга</b>' }, 'ru', [{ formId: 'medical-history', ref: 'SD-00042', submittedAt: '2026-10-26T10:00:00Z' }])
+assert.match(mail.subject, /подписанные/)
+assert.match(mail.html, /&#60;b&#62;Ольга/, 'name is escaped in html')
+assert.doesNotMatch(mail.html, /<b>Ольга/)
+assert.match(mail.text, /Медицинская анкета \(SD-00042\), 26 окт\. 2026 г\., 12:00/, 'title, ref and Cyprus local time')
+assert.doesNotMatch(mail.html + mail.text, /diabetes|Метформин/i, 'no answers in the email')
+
 // --- seed data is schema-valid ---
 const db = seed()
 for (const s of db.submissions) {
@@ -42,7 +51,7 @@ for (const s of db.submissions) {
 
 // --- end to end ---
 const PORT = 3099
-const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, DEMO_PASSCODE: 'test-pass' }, stdio: 'ignore' })
+const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, DEMO_PASSCODE: 'test-pass', RESEND_API_KEY: '' }, stdio: 'ignore' })
 const url = p => `http://localhost:${PORT}${p}`
 try {
   for (let i = 0; i < 50; i++) {

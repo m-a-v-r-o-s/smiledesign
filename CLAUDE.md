@@ -10,6 +10,9 @@ This is a **clickable pitch demo with invented data**, not production. Started 2
 - `npm run dev`: Vite with HMR (proxies `/api` to the `npm start` server on :3001).
 - `npm test`: schema validation, seed integrity, end-to-end API pass (spawns its own server on :3099).
 - Admin passcode: `DEMO_PASSCODE` env var, default `smile2026`.
+- Patient confirmation email (`email.js`): set `RESEND_API_KEY` (in `.env` locally, `npm start` loads it). Without it
+  no mail is sent. Sender defaults to `forms@akosds.com` (verified in Resend, EU); `MAIL_FROM` overrides it once the
+  clinic's own domain is set up. The email lists form titles and refs only, never answers.
 - iPad: open `/kiosk` in Safari, Share, Add to Home Screen (full screen), then lock with Guided Access.
 
 ## Layout
