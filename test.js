@@ -1,6 +1,9 @@
 // npm test: schema validation, seed integrity, and an end-to-end pass against a real server process.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
+import { mkdtempSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { FORMS, validateSubmission, validateAnswers, alertsFor } from './shared/forms.js'
 import { seed } from './seed.js'
 import { renderEmail } from './email.js'
@@ -51,7 +54,8 @@ for (const s of db.submissions) {
 
 // --- end to end ---
 const PORT = 3099
-const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, DEMO_PASSCODE: 'test-pass', RESEND_API_KEY: '' }, stdio: 'ignore' })
+const DATA_DIR = mkdtempSync(join(tmpdir(), 'sd-test-'))
+const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, SETUP_CODE: 'setup-123', DATA_DIR, RESEND_API_KEY: '' }, stdio: 'ignore' })
 const url = p => `http://localhost:${PORT}${p}`
 try {
   for (let i = 0; i < 50; i++) {
@@ -59,8 +63,17 @@ try {
     await new Promise(r => setTimeout(r, 100))
   }
   assert.equal((await fetch(url('/api/submissions'))).status, 401, 'admin API needs a session')
-  assert.equal((await fetch(url('/api/login'), { method: 'POST', body: '{"passcode":"wrong"}' })).status, 401)
-  const login = await fetch(url('/api/login'), { method: 'POST', body: '{"passcode":"test-pass"}' })
+  const post = (p, b) => fetch(url(p), { method: 'POST', body: JSON.stringify(b) })
+  assert.deepEqual(await fetch(url('/api/auth')).then(r => r.json()), { setup: true }, 'no password yet')
+  assert.equal((await post('/api/login', { code: 'wrong', password: 'a long enough password' })).status, 403, 'setup needs the code')
+  assert.equal((await post('/api/login', { code: 'setup-123', password: 'short' })).status, 400, 'min 12 chars')
+  assert.equal((await post('/api/login', { code: 'setup-123', password: 'clinic password 1' })).status, 200, 'password chosen')
+  assert.deepEqual(await fetch(url('/api/auth')).then(r => r.json()), { setup: false })
+  assert.doesNotMatch(readFileSync(join(DATA_DIR, 'admin.json'), 'utf8'), /clinic password/, 'stored hashed')
+  assert.equal((await post('/api/login', { code: 'setup-123', password: 'another password 2' })).status, 403, 'setup code cannot reset it')
+  assert.equal((await post('/api/login', { password: 'wrong password' })).status, 403)
+  const login = await post('/api/login', { password: 'clinic password 1' })
+  assert.equal(login.status, 200)
   const cookie = login.headers.get('set-cookie').split(';')[0]
   const get = p => fetch(url(p), { headers: { cookie } }).then(r => r.json())
 

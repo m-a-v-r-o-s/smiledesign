@@ -1,19 +1,28 @@
-// Demo server: serves the built app (dist/), the kiosk submit endpoint and the admin API.
+// Server: serves the built app (dist/), the kiosk submit endpoint and the admin API.
 // ponytail: data lives in memory and resets to the seed on restart. The MVP swaps this for Supabase (EU).
 import http from 'node:http'
-import { createReadStream } from 'node:fs'
+import { createReadStream, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { stat } from 'node:fs/promises'
-import { randomUUID, randomBytes, timingSafeEqual, createHash } from 'node:crypto'
-import { extname, join, normalize } from 'node:path'
+import { randomUUID, randomBytes, timingSafeEqual, createHash, scrypt } from 'node:crypto'
+import { promisify } from 'node:util'
+import { dirname, extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateSubmission, alertsFor, norm } from './shared/forms.js'
 import { seed } from './seed.js'
 import { sendConfirmation } from './email.js'
 
 const PORT = Number(process.env.PORT) || 3001
-const PASSCODE = process.env.DEMO_PASSCODE || 'smile2026'
 const DIST = fileURLToPath(new URL('./dist/', import.meta.url))
-const db = seed()
+const db = process.env.SEED === 'off' ? { patients: [], submissions: [] } : seed()
+
+// Admin password: the clinic chooses it on first sign-in, proving it with the one-time setup code from the server log.
+// Stored as a salted scrypt hash in DATA_DIR (a Railway volume), so it survives restarts.
+const ADMIN_FILE = join(process.env.DATA_DIR || fileURLToPath(new URL('./data/', import.meta.url)), 'admin.json')
+const SETUP_CODE = process.env.SETUP_CODE || randomBytes(5).toString('hex')
+let admin = null
+try { admin = JSON.parse(readFileSync(ADMIN_FILE, 'utf8')) } catch {}
+const scryptAsync = promisify(scrypt)
+const hashPassword = async (pw, salt) => scryptAsync(pw, Buffer.from(salt, 'hex'), 64)
 const sessions = new Set()
 const listeners = new Set()
 
@@ -98,6 +107,14 @@ const sha = s => createHash('sha256').update(s).digest()
 const authed = req => sessions.has(/(?:^|;\s*)sd_session=([a-f0-9]{64})/.exec(req.headers.cookie || '')?.[1])
 const secure = req => req.headers['x-forwarded-proto'] === 'https'
 
+// One admin account: after 5 wrong attempts in a row it locks for 30s, doubling each time, at most 15 minutes.
+let fails = 0, lockedUntil = 0
+function failed(res, error) {
+  if (++fails >= 5) lockedUntil = Date.now() + Math.min(30_000 * 2 ** (fails - 5), 15 * 60_000)
+  console.warn(`security: failed sign-in (${fails} in a row)`)
+  return send(res, 403, { error })
+}
+
 function broadcast(event, data) {
   for (const res of listeners) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
 }
@@ -127,20 +144,33 @@ async function api(req, res, path) {
     return send(res, 201, { ok: true, count: created.length })
   }
 
+  if (m === 'GET' && path === '/api/auth') return send(res, 200, { setup: !admin })
+
+  // First sign-in (no password yet): { code, password } sets the password. After that: { password }.
   if (m === 'POST' && path === '/api/login') {
-    if (limited(req, 'login', 8)) return send(res, 429, { error: 'Too many attempts, wait a minute' })
-    const { passcode } = await readJson(req, 1000)
-    if (typeof passcode !== 'string' || !timingSafeEqual(sha(passcode), sha(PASSCODE))) {
-      return send(res, 401, { error: 'Wrong passcode' })
+    if (limited(req, 'login', 8) || Date.now() < lockedUntil) return send(res, 429, { error: 'Too many attempts, try again in a few minutes' })
+    const { code, password } = await readJson(req, 1000)
+    if (typeof password !== 'string' || password.length > 128) return send(res, 400, { error: 'Password required' })
+    if (!admin) {
+      if (typeof code !== 'string' || !timingSafeEqual(sha(code.trim()), sha(SETUP_CODE))) return failed(res, 'Wrong setup code')
+      if (password.length < 12) return send(res, 400, { error: 'Choose a password of at least 12 characters' })
+      const salt = randomBytes(16).toString('hex')
+      const hash = (await hashPassword(password, salt)).toString('hex')
+      if (admin) return send(res, 409, { error: 'Password already set' })
+      admin = { salt, hash, setAt: new Date().toISOString() }
+      mkdirSync(dirname(ADMIN_FILE), { recursive: true })
+      writeFileSync(ADMIN_FILE, JSON.stringify(admin), { mode: 0o600 })
+      sessions.clear()
+      console.log('security: admin password set')
+    } else if (!timingSafeEqual(await hashPassword(password, admin.salt), Buffer.from(admin.hash, 'hex'))) {
+      return failed(res, 'Wrong password')
     }
+    fails = 0
     const token = randomBytes(32).toString('hex')
     sessions.add(token)
     const cookie = `sd_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${secure(req) ? '; Secure' : ''}`
     return send(res, 200, { ok: true }, { 'Set-Cookie': cookie })
   }
-
-  // ponytail: demo only, shows the passcode on the login screen. Remove before any real patient data.
-  if (m === 'GET' && path === '/api/demo-passcode') return send(res, 200, { passcode: PASSCODE })
 
   // Everything below is staff-only.
   if (!authed(req)) return send(res, 401, { error: 'Sign in required' })
@@ -230,5 +260,5 @@ http.createServer(async (req, res) => {
   }
 }).listen(PORT, () => {
   console.log(`Smile Design forms demo on http://localhost:${PORT}  (kiosk: /kiosk, admin: /admin)`)
-  if (!process.env.DEMO_PASSCODE) console.log(`Admin passcode (default, set DEMO_PASSCODE to change): ${PASSCODE}`)
+  if (!admin) console.log(`Admin setup code (first sign-in only, to choose the password): ${SETUP_CODE}`)
 })

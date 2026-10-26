@@ -138,48 +138,60 @@ export default function Admin() {
 }
 
 function Login({ onDone }) {
+  const [setup, setSetup] = useState(null) // true = first sign-in, the clinic chooses the password
   const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [repeat, setRepeat] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [hint, setHint] = useState('')
   const [show, setShow] = useState(false)
-  useEffect(() => { api('/api/demo-passcode').then(d => setHint(d.passcode)).catch(() => {}) }, [])
+  useEffect(() => { api('/api/auth').then(d => setSetup(d.setup)).catch(() => setSetup(false)) }, [])
   async function submit(e) {
     e.preventDefault()
+    if (setup && password !== repeat) return setError('The two passwords do not match')
     setBusy(true); setError('')
     try {
-      await api('/api/login', { method: 'POST', body: JSON.stringify({ passcode: code }) })
+      await api('/api/login', { method: 'POST', body: JSON.stringify(setup ? { code, password } : { password }) })
       onDone()
     } catch (err) {
-      setError(err instanceof Unauthorized ? 'Wrong passcode' : err.message)
+      setError(err.message)
     } finally { setBusy(false) }
   }
+  if (setup === null) return null
+  const pw = (id, label, value, set, autoComplete) => (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <div className="reveal">
+        <input id={id} type={show ? 'text' : 'password'} value={value} onChange={e => set(e.target.value)} required maxLength={128}
+          minLength={setup ? 12 : undefined} autoComplete={autoComplete} autoFocus={!setup && id === 'password'} aria-invalid={!!error} aria-describedby={error ? 'login-err' : undefined} />
+        <button type="button" className="reveal-btn" onClick={() => setShow(s => !s)} aria-pressed={show} aria-label={show ? 'Hide password' : 'Show password'}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+            {show && <path d="M4 4l16 16" />}
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
   return (
     <main className="login">
       <form onSubmit={submit} className="login-card">
         <img src="/logo.svg" alt="Smile Design Dental Clinic" width="200" height="99" />
-        <h1>Clinic sign in</h1>
-        <div className="field">
-          <label htmlFor="passcode">Passcode</label>
-          <div className="reveal">
-            <input id="passcode" type={show ? 'text' : 'password'} value={code} onChange={e => setCode(e.target.value)} autoFocus required
-              autoComplete="current-password" aria-invalid={!!error} aria-describedby={error ? 'login-err' : undefined} />
-            <button type="button" className="reveal-btn" onClick={() => setShow(s => !s)} aria-pressed={show} aria-label={show ? 'Hide passcode' : 'Show passcode'}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
-                <circle cx="12" cy="12" r="3" />
-                {show && <path d="M4 4l16 16" />}
-              </svg>
-            </button>
+        <h1>{setup ? 'Choose your password' : 'Clinic sign in'}</h1>
+        {setup ? <>
+          <p className="demo-hint">First sign-in: enter the setup code you received, then choose a password of at least 12 characters.</p>
+          <div className="field">
+            <label htmlFor="code">Setup code</label>
+            <input id="code" value={code} onChange={e => setCode(e.target.value)} required autoFocus autoComplete="one-time-code" spellCheck={false} />
           </div>
-          {error && <p className="field-error" id="login-err" role="alert">{error}</p>}
-        </div>
-        <button className="btn primary block" disabled={busy || !code} aria-busy={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-        {hint && (
-          <p className="demo-hint">
-            Demo passcode: <button type="button" className="link mono" onClick={() => setCode(hint)} aria-label={`Fill in demo passcode ${hint}`}>{hint}</button>
-          </p>
-        )}
+          {pw('password', 'New password', password, setPassword, 'new-password')}
+          {pw('repeat', 'Repeat password', repeat, setRepeat, 'new-password')}
+        </> : pw('password', 'Password', password, setPassword, 'current-password')}
+        {error && <p className="field-error" id="login-err" role="alert">{error}</p>}
+        <button className="btn primary block" disabled={busy || !password} aria-busy={busy}>
+          {busy ? 'Signing in…' : setup ? 'Set password and sign in' : 'Sign in'}
+        </button>
       </form>
     </main>
   )

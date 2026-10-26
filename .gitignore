@@ -3,3 +3,4 @@ dist
 .env
 demo/out
 docs/out
+data

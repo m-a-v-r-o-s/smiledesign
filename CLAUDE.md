@@ -9,7 +9,11 @@ This is a **clickable pitch demo with invented data**, not production. Started 2
 - `npm run build && npm start`: build, then serve everything on :3001 (`/kiosk`, `/admin`, `/` launcher).
 - `npm run dev`: Vite with HMR (proxies `/api` to the `npm start` server on :3001).
 - `npm test`: schema validation, seed integrity, end-to-end API pass (spawns its own server on :3099).
-- Admin passcode: `DEMO_PASSCODE` env var, default `smile2026`.
+- Admin password: chosen by the clinic on first sign-in at `/admin`, which needs the one-time setup code the server
+  prints to its log at startup (random per boot, or set `SETUP_CODE`). Stored as a scrypt hash in `DATA_DIR/admin.json`
+  (default `./data/`; on Railway mount a volume and point `DATA_DIR` at it, or the password resets on every deploy).
+  To reset it: delete that file and restart. 5 wrong attempts in a row lock sign-in for 30s, doubling, max 15 min.
+- `SEED=off` starts with no invented patients (the test deployment); unset keeps the pitch-demo seed.
 - Patient confirmation email (`email.js`): set `RESEND_API_KEY` (in `.env` locally, `npm start` loads it). Without it
   no mail is sent. Sender defaults to `forms@akosds.com` (verified in Resend, EU); `MAIL_FROM` overrides it once the
   clinic's own domain is set up. The email lists form titles and refs only, never answers.
@@ -21,7 +25,7 @@ This is a **clickable pitch demo with invented data**, not production. Started 2
   validation and the alert extraction. Two real forms from the clinic's paper originals (2026-10-22): the medical
   form and the media consent (Kaimakki Studio). EN/EL are as printed (with three noted fixes in the file header),
   RU is our translation and needs a native-speaker and legal check before real use.
-- `server.js`: dependency-free Node: static `dist/`, kiosk submit, passcode-gated admin API, live updates over SSE.
+- `server.js`: dependency-free Node: static `dist/`, kiosk submit, password-gated admin API, live updates over SSE.
   Data is **in memory** and resets to `seed.js` on restart.
 - `seed.js`: invented patients (Greek, Russian, English names), deterministic. Never put real patient data here.
 - `src/Kiosk.jsx` (iPad), `src/Admin.jsx` (desktop), `src/SignaturePad.jsx`, `src/styles.css` (brand tokens on `:root`).
@@ -34,8 +38,8 @@ Gold `#b18435` (decorative only, 3.4:1), text/buttons gold `#8c6421` (5.3:1), ch
 ## Before this becomes a real product (MVP)
 
 - Supabase in an EU region (health data is GDPR special-category), RLS on every table, signatures in a private bucket.
-- Staff auth with email OTP, per-user accounts, audit log of who opened/printed which form.
-  Delete `/api/demo-passcode` and the login-screen hint: they publish the demo passcode.
+- Staff auth with email OTP, per-user accounts, audit log of who opened/printed which form (today: one shared password).
+- Patients and forms are still in memory: a restart or deploy wipes them.
 - Server-generated PDF stored at signing time (the browser print is fine for the demo).
 - iPad pairing token so only the clinic's iPad can submit.
 - Ops health check (`/healthz` exists; add `/api/health/ops` once there is a database).
